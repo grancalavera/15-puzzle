@@ -6,7 +6,7 @@ import { PixiPlugin } from "gsap/PixiPlugin";
 import * as p from "pixi.js";
 import { Application } from "pixi.js";
 import { Cell, getColIdx, getRowIdx, gridCount, Idx, isBlank } from "./model";
-import { initialState, state$, swap } from "./state";
+import { applyNextSwap, hasSwaps, initialState, state$, swap } from "./state";
 
 const getCellPosByIdx = (idx: Idx) => ({
   x: getColIdx(idx) * (cellSize + gap),
@@ -149,13 +149,19 @@ initialState.board.forEach((cell, i) => {
 
 state$.subscribe((state) => {
   const { board, swappables, isSolved } = state;
+  const swaps = hasSwaps(state);
+
   board.forEach((cell, i) => {
     const idx = i as Idx;
-    const isSwappable = swappables.includes(idx);
+    const isSwappable = swappables.includes(idx) && !swaps;
     const cellElement = cellMap.get(cell);
     if (!cellElement) return;
     cellElement.update(idx, isSwappable, isSolved);
   });
+
+  if (state.hasSwaps) {
+    applyNextSwap(state.swaps);
+  }
 });
 
 boardContainer.addChild(...[...cellMap.values()].map((c) => c.el));

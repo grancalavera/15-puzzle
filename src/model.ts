@@ -86,14 +86,15 @@ const swapVertically = (blankIdx: Idx, cellIdx: Idx): Swap[] => {
   ]);
 };
 
-export const previewSwaps = (board: Board, swap: [Idx, Idx][]): Board => {
-  const preview = [...board];
-  swap.forEach(([from, to]) => {
-    const temp = preview[from]!;
-    preview[from] = preview[to]!;
-    preview[to] = temp;
-  });
-  return preview as Board;
+export const previewSwaps = (board: Board, swaps: [Idx, Idx][]): Board =>
+  swaps.reduce(applySwap, board);
+
+export const applySwap = (board: Board, [from, to]: Swap): Board => {
+  const draft = [...board];
+  const temp = draft[from]!;
+  draft[from] = draft[to]!;
+  draft[to] = temp;
+  return draft as Board;
 };
 
 const swapColBy = (original: Idx, count: number): Idx => {
