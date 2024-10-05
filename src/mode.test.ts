@@ -4,9 +4,9 @@ import {
   isSolved,
   previewSwaps,
   Swap,
-  swappables,
+  getSwappables,
   Swappables,
-  swaps,
+  getSwaps,
 } from "./model";
 
 describe("solving puzzles", () => {
@@ -31,7 +31,7 @@ describe("swapping cells", () => {
     ] as Board;
 
     it("calculate", () => {
-      const actual = swaps(board, 0);
+      const actual = getSwaps(board, 0);
       expect(actual).toEqual([]);
     });
   });
@@ -55,7 +55,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = swaps(board, 11);
+        const actual = getSwaps(board, 11);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -79,7 +79,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = swaps(board, 7);
+        const actual = getSwaps(board, 7);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -104,7 +104,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = swaps(board, 3);
+        const actual = getSwaps(board, 3);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -125,7 +125,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = swaps(board, 14);
+        const actual = getSwaps(board, 14);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -149,7 +149,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = swaps(board, 13);
+        const actual = getSwaps(board, 13);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -174,7 +174,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = swaps(board, 12);
+        const actual = getSwaps(board, 12);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -194,7 +194,7 @@ describe("swapping cells", () => {
     ] as Board;
 
     it("forbidden vertical swap", () => {
-      const actual = swaps(board, 5);
+      const actual = getSwaps(board, 5);
       expect(actual).toEqual([]);
     });
 
@@ -208,7 +208,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = swaps(board, 4);
+        const actual = getSwaps(board, 4);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -232,7 +232,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = swaps(board, 8);
+        const actual = getSwaps(board, 8);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -257,7 +257,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = swaps(board, 12);
+        const actual = getSwaps(board, 12);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -278,7 +278,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = swaps(board, 1);
+        const actual = getSwaps(board, 1);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -302,7 +302,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = swaps(board, 2);
+        const actual = getSwaps(board, 2);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -327,7 +327,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = swaps(board, 3);
+        const actual = getSwaps(board, 3);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -367,11 +367,21 @@ describe("swappable cells", () => {
       ] as Board,
       expected: [1, 2, 3, 4, 8, 12],
     },
+    {
+      name: "blank at 14",
+      board: [
+        ...[0, 1, 2, 3],
+        ...[4, 5, 6, 7],
+        ...[8, 9, 10, 11],
+        ...[12, 13, _, 15],
+      ] as Board,
+      expected: [12, 13, 15, 2, 6, 10],
+    },
   ];
 
-  describe.each(scenarios)("$name", ({ name, board, expected }) => {
+  describe.each(scenarios)("$name", ({ board, expected }) => {
     it("find swappable cells", () => {
-      const actual = swappables(board);
+      const actual = getSwappables(board);
       expect(actual).toEqual(expected);
     });
   });
