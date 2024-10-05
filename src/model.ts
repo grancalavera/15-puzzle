@@ -1,5 +1,6 @@
 type Cell = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
 type Idx = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
+
 export type Swap = [Idx, Idx];
 
 export type Board = [
@@ -49,7 +50,7 @@ export const isSolved: IsSolved = isSorted;
 
 export const calculateSwaps = (board: Board, cellIdx: Idx): Swap[] => {
   const blankIdx = getIdx(board, _);
-  const isCell = cellIdx !== blankIdx;
+  const isCell = blankIdx !== undefined && cellIdx !== blankIdx;
 
   if (isCell && sameRow(blankIdx, cellIdx)) {
     return swapHorizontally(blankIdx, cellIdx);
@@ -63,11 +64,14 @@ export const calculateSwaps = (board: Board, cellIdx: Idx): Swap[] => {
 };
 
 const swapHorizontally = (blankIdx: Idx, cellIdx: Idx): Swap[] => {
-  const distance = Math.abs(blankIdx - cellIdx);
-  return [...Array(distance).keys()].map((i) => [
-    swapColBy(blankIdx, i),
-    swapColBy(blankIdx, i + 1),
-  ]);
+  const distance = cellIdx - blankIdx;
+  const sign = Math.sign(distance);
+  const abs = Math.abs(distance);
+  return [...Array(abs).keys()].map((i) => {
+    const a = swapColBy(blankIdx, i * sign);
+    const b = swapColBy(blankIdx, i * sign + 1 * sign);
+    return [a, b];
+  });
 };
 
 const swapVertically = (blankIdx: Idx, cellIdx: Idx): Swap[] => {
@@ -114,6 +118,11 @@ const sameCol = (target: Idx, candidate: number): candidate is Idx => {
 
 const getRow = (index: Idx) => Math.floor(index / rowCount);
 const getCol = (index: Idx) => index % colCount;
-const getIdx = (board: Board, cell: Cell) => board.indexOf(cell) as Idx;
+
+const getIdx = (board: Board, cell: Cell): Idx | undefined => {
+  const candidate = board.indexOf(cell);
+  return isIdx(candidate) ? candidate : undefined;
+};
+
 const isIdx = (candidate: number): candidate is Idx =>
   candidate >= 0 && candidate < rowCount * colCount;

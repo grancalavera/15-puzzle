@@ -20,6 +20,99 @@ describe("solving puzzles", () => {
 });
 
 describe("swapping cells", () => {
+  describe("blank can never swap", () => {
+    const board: Board = [
+      ...[0, 0, 0, 0],
+      ...[0, 0, 0, 0],
+      ...[0, 0, 0, 0],
+      ...[0, 0, 0, 0],
+    ] as Board;
+
+    it("calculate", () => {
+      const actual = calculateSwaps(board, 1);
+      expect(actual).toEqual([]);
+    });
+  });
+
+  describe("forwards swaps", () => {
+    const board: Board = [
+      ...[0, 0, 0, 3],
+      ...[0, 0, 0, 4],
+      ...[0, 0, 0, 5],
+      ...[6, 7, 8, _],
+    ] as Board;
+
+    describe("one horizontal swap", () => {
+      const expectedSwaps: Swap[] = [[15, 14]];
+
+      const expectedPreview: Board = [
+        ...[0, 0, 0, 3],
+        ...[0, 0, 0, 4],
+        ...[0, 0, 0, 5],
+        ...[6, 7, _, 8],
+      ] as Board;
+
+      it("calculate", () => {
+        const actual = calculateSwaps(board, 14);
+        expect(actual).toEqual(expectedSwaps);
+      });
+
+      it("preview", () => {
+        const actual = previewSwaps(board, expectedSwaps);
+        expect(actual).toEqual(expectedPreview);
+      });
+    });
+
+    describe("two horizontal swaps", () => {
+      const expectedSwaps: Swap[] = [
+        [15, 14],
+        [14, 13],
+      ];
+
+      const expectedPreview: Board = [
+        ...[0, 0, 0, 3],
+        ...[0, 0, 0, 4],
+        ...[0, 0, 0, 5],
+        ...[6, _, 7, 8],
+      ] as Board;
+
+      it("calculate", () => {
+        const actual = calculateSwaps(board, 13);
+        expect(actual).toEqual(expectedSwaps);
+      });
+
+      it("preview", () => {
+        const actual = previewSwaps(board, expectedSwaps);
+        expect(actual).toEqual(expectedPreview);
+      });
+    });
+
+    describe("three horizontal swaps", () => {
+      const expectedSwaps: Swap[] = [
+        [15, 14],
+        [14, 13],
+        [13, 12],
+      ];
+
+      const expectedPreview: Board = [
+        ...[0, 0, 0, 3],
+        ...[0, 0, 0, 4],
+        ...[0, 0, 0, 5],
+        ...[_, 6, 7, 8],
+      ] as Board;
+
+      it("calculate", () => {
+        const actual = calculateSwaps(board, 12);
+        expect(actual).toEqual(expectedSwaps);
+      });
+
+      it("preview", () => {
+        const actual = previewSwaps(board, expectedSwaps);
+        expect(actual).toEqual(expectedPreview);
+      });
+    });
+  });
+
   describe("backwards swaps", () => {
     const board: Board = [
       ...[_, 3, 4, 5],
@@ -27,11 +120,6 @@ describe("swapping cells", () => {
       ...[7, 0, 0, 0],
       ...[8, 0, 0, 0],
     ] as Board;
-
-    it("blank can never swap", () => {
-      const actual = calculateSwaps(board, _);
-      expect(actual).toEqual([]);
-    });
 
     describe("one horizontal swap", () => {
       const expectedSwaps: Swap[] = [[0, 1]];
