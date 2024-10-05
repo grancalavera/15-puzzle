@@ -65,20 +65,19 @@ export const calculateSwaps = (board: Board, cellIdx: Idx): Swap[] => {
 
 const swapHorizontally = (blankIdx: Idx, cellIdx: Idx): Swap[] => {
   const distance = cellIdx - blankIdx;
-  const sign = Math.sign(distance);
-  const abs = Math.abs(distance);
-  return [...Array(abs).keys()].map((i) => {
-    const a = swapColBy(blankIdx, i * sign);
-    const b = swapColBy(blankIdx, i * sign + 1 * sign);
-    return [a, b];
-  });
+  const direction = Math.sign(distance);
+  return [...Array(Math.abs(distance)).keys()].map((stepSize) => [
+    swapColBy(blankIdx, stepSize * direction),
+    swapColBy(blankIdx, stepSize * direction + 1 * direction),
+  ]);
 };
 
 const swapVertically = (blankIdx: Idx, cellIdx: Idx): Swap[] => {
-  const distance = Math.abs(getRow(blankIdx) - getRow(cellIdx));
-  return [...Array(distance).keys()].map((i) => [
-    swapRowBy(blankIdx, i),
-    swapRowBy(blankIdx, i + 1),
+  const distance = getRow(cellIdx) - getRow(blankIdx);
+  const direction = Math.sign(distance);
+  return [...Array(Math.abs(distance)).keys()].map((stepSize) => [
+    swapRowBy(blankIdx, stepSize * direction),
+    swapRowBy(blankIdx, stepSize * direction + 1 * direction),
   ]);
 };
 
