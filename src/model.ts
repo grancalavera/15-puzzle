@@ -22,7 +22,16 @@ export type Board = [
   Cell
 ];
 
+export type NonEmptyArray<T> = [T, ...T[]];
+export type Choose<T> = (arr: NonEmptyArray<T>) => T;
+export type Swappables = [Idx, Idx, Idx, Idx, Idx, Idx];
+export type Row = [Cell, Cell, Cell, Cell];
+export type Col = [Cell, Cell, Cell, Cell];
+
 export const _: Cell = 15;
+export const solved: Board = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 14,
+];
 
 const rowCount = 4;
 const colCount = 4;
@@ -45,11 +54,10 @@ const isSorted = (arr: number[]): boolean => {
   return true;
 };
 
-type IsSolved = (board: Board) => boolean;
-export const isSolved: IsSolved = isSorted;
+export const isSolved = (candidate: Board): boolean => isSorted(candidate);
 
-export const calculateSwaps = (board: Board, cellIdx: Idx): Swap[] => {
-  const blankIdx = getIdx(board, _);
+export const swaps = (board: Board, cellIdx: Idx): Swap[] => {
+  const blankIdx = getBlankIdx(board);
   const isCell = blankIdx !== undefined && cellIdx !== blankIdx;
 
   if (isCell && sameRow(blankIdx, cellIdx)) {
@@ -73,7 +81,7 @@ const swapHorizontally = (blankIdx: Idx, cellIdx: Idx): Swap[] => {
 };
 
 const swapVertically = (blankIdx: Idx, cellIdx: Idx): Swap[] => {
-  const distance = getRow(cellIdx) - getRow(blankIdx);
+  const distance = getRowIdx(cellIdx) - getRowIdx(blankIdx);
   const direction = Math.sign(distance);
   return [...Array(Math.abs(distance)).keys()].map((stepSize) => [
     swapRowBy(blankIdx, stepSize * direction),
@@ -105,23 +113,62 @@ const sameRow = (target: Idx, candidate: number): candidate is Idx => {
   if (!isIdx(candidate)) {
     return false;
   }
-  return getRow(target) === getRow(candidate);
+  return getRowIdx(target) === getRowIdx(candidate);
 };
 
 const sameCol = (target: Idx, candidate: number): candidate is Idx => {
   if (!isIdx(candidate)) {
     return false;
   }
-  return getCol(target) === getCol(candidate);
+  return getColIdx(target) === getColIdx(candidate);
 };
 
-const getRow = (index: Idx) => Math.floor(index / rowCount);
-const getCol = (index: Idx) => index % colCount;
+// unsafe
+const getRowIdx = (index: Idx): Idx => Math.floor(index / rowCount) as Idx;
 
-const getIdx = (board: Board, cell: Cell): Idx | undefined => {
-  const candidate = board.indexOf(cell);
-  return isIdx(candidate) ? candidate : undefined;
+// unsafe
+const getColIdx = (index: Idx): Idx => (index % colCount) as Idx;
+
+const getRow = (row: Idx): Row =>
+  [
+    row * rowCount,
+    row * rowCount + 1,
+    row * rowCount + 2,
+    row * rowCount + 3,
+  ] as Row;
+
+const getCol = (col: Idx): Col =>
+  [col, col + rowCount, col + rowCount * 2, col + rowCount * 3] as Col;
+
+const getBlankIdx = (board: Board): Idx => {
+  const candidate = board.indexOf(_);
+  if (!isIdx(candidate)) {
+    throw new Error("Invalid board: blank not found");
+  }
+  return candidate;
 };
 
 const isIdx = (candidate: number): candidate is Idx =>
   candidate >= 0 && candidate < rowCount * colCount;
+
+const choose = <T>(arr: [T, ...T[]]): T => {
+  return arr[Math.floor(Math.random() * arr.length)]!;
+};
+
+export const randomSwaps = (board: Board): Swap[] => {
+  const idx = choose(swappables(board));
+  return swaps(board, idx);
+};
+
+export const swappables = (board: Board): Swappables => {
+  const blankIdx = getBlankIdx(board);
+  return [
+    ...getRow(getRowIdx(blankIdx)),
+    ...getCol(getColIdx(blankIdx)),
+  ].filter((idx) => idx !== blankIdx) as Swappables;
+};
+
+export const getRandomSwaps = (board: Board): Swap[] => {
+  const idx = choose(swappables(board));
+  return swaps(board, idx);
+};
