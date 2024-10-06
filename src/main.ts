@@ -28,9 +28,9 @@ class CellElement {
   #colorOver: p.ColorSource = 0xfefab7;
   #colorUp: p.ColorSource = "white";
   #colorDown: p.ColorSource = 0xdcd8a4;
-  #colorBlank: p.ColorSource = "pink";
+  #colorBlank: p.ColorSource = "gray";
 
-  onSwap: (idx: Idx) => void = () => {};
+  onRequestSwap: (idx: Idx) => void = () => {};
 
   set interactive(value: boolean) {
     this.#isInteractive = value && !this.#isBlank;
@@ -49,8 +49,14 @@ class CellElement {
     if (this.#idx === idx) return idx;
     this.#idx = idx;
     const { x, y } = getCellPosByIdx(this.#idx);
-    this.el.position.set(x, y);
-    await wait(250);
+    await gsap
+      .to(this.el, {
+        pixi: { x, y },
+        duration: 0.15,
+        // https://gsap.com/docs/v3/Eases
+        ease: "power3.inOut",
+      })
+      .then();
     return idx;
   }
 
@@ -72,6 +78,8 @@ class CellElement {
 
     const { x, y } = getCellPosByIdx(idx);
     this.el = new p.Container();
+    this.el.zIndex = this.#isBlank ? 0 : 1;
+
     this.el.position.set(x, y);
     this.el.interactive = true;
 
@@ -108,7 +116,7 @@ class CellElement {
 
       this.el.addEventListener("click", () => {
         if (!this.#isInteractive) return;
-        this.onSwap(this.#idx);
+        this.onRequestSwap(this.#idx);
       });
     }
   }
@@ -150,7 +158,7 @@ initialState.board.forEach((cell, i) => {
   const idx = i as Idx;
   const isInteractive = initialState.swappables.includes(idx);
   const cellElement = new CellElement(idx, cell, isInteractive);
-  cellElement.onSwap = requestSwap;
+  cellElement.onRequestSwap = requestSwap;
   cells.push(cellElement);
 });
 
