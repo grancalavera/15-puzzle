@@ -19,6 +19,7 @@ type GameState = PrimaryState & DerivedState;
 type PrimaryState = {
   board: Board;
   swaps: Swap[];
+  shuffles: number;
 };
 
 type DerivedState = {
@@ -28,9 +29,11 @@ type DerivedState = {
 
 const requestSwap$ = new Subject<Idx>();
 const applyNextSwap$ = new Subject<void>();
+const shuffle$ = new Subject<number>();
 
 export const requestSwap = (idx: Idx) => requestSwap$.next(idx);
 export const applyNextSwap = () => applyNextSwap$.next();
+export const shuffle = (shuffles: number) => shuffle$.next(shuffles);
 
 const update = (current: GameState, next: Partial<PrimaryState> = {}) => {
   const updated = { ...current, ...next };
@@ -51,11 +54,13 @@ export const initialState = derive({
     ...[12, 13, 14, _],
   ] as Board,
   swaps: [],
+  shuffles: 0,
 });
 
 const action$ = mergeWithKey({
   requestSwap$,
   applyNextSwap$,
+  shuffle$,
 });
 
 export const state$ = action$.pipe(
@@ -73,6 +78,10 @@ export const state$ = action$.pipe(
         if (!nextSwap) return state;
         const board = applySwap(state.board, nextSwap);
         return update(state, { board, swaps });
+      }
+
+      case "shuffle$": {
+        return state;
       }
 
       default:

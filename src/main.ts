@@ -8,21 +8,29 @@ import { Application } from "pixi.js";
 import { Cell, getColIdx, getRowIdx, gridCount, Idx, isBlank } from "./model";
 import { applyNextSwap, initialState, requestSwap, state$ } from "./state";
 
-async function wait(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 const getCellPosByIdx = (idx: Idx) => ({
   x: getColIdx(idx) * (cellSize + gap),
   y: getRowIdx(idx) * (cellSize + gap),
 });
+
+class ShuffleButton {
+  el: p.Container;
+  constructor() {
+    this.el = new p.Container();
+    const bg = new p.Graphics()
+      .rect(padding, padding, cellSize * 4 + gap * 3, cellSize * 4 + gap * 3)
+      .fill({ color: "white", alpha: 0.9 });
+    bg.zIndex = 100;
+    this.el.addChild(bg);
+  }
+}
 
 class CellElement {
   el: p.Container;
 
   #idx: Idx;
   #isBlank: boolean;
-  #isInteractive: boolean;
+  #interactive: boolean;
   #bg: p.Graphics | undefined;
 
   #colorOver: p.ColorSource = 0xfefab7;
@@ -33,12 +41,12 @@ class CellElement {
   onRequestSwap: (idx: Idx) => void = () => {};
 
   set interactive(value: boolean) {
-    this.#isInteractive = value && !this.#isBlank;
+    this.#interactive = value && !this.#isBlank;
     this.#resetBg();
   }
 
   get interactive() {
-    return this.#isInteractive;
+    return this.#interactive;
   }
 
   get idx() {
@@ -48,10 +56,9 @@ class CellElement {
   async swap(idx: Idx): Promise<Idx> {
     if (this.#idx === idx) return idx;
     this.#idx = idx;
-    const { x, y } = getCellPosByIdx(this.#idx);
     await gsap
       .to(this.el, {
-        pixi: { x, y },
+        pixi: getCellPosByIdx(this.#idx),
         duration: 0.15,
         // https://gsap.com/docs/v3/Eases
         ease: "power3.inOut",
@@ -74,7 +81,7 @@ class CellElement {
   constructor(idx: Idx, cell: Cell, interactive: boolean) {
     this.#idx = idx;
     this.#isBlank = isBlank(cell);
-    this.#isInteractive = interactive && !this.#isBlank;
+    this.#interactive = interactive && !this.#isBlank;
 
     const { x, y } = getCellPosByIdx(idx);
     this.el = new p.Container();
@@ -95,27 +102,27 @@ class CellElement {
 
     if (!this.#isBlank) {
       this.el.addEventListener("mouseover", () => {
-        if (!this.#isInteractive) return;
+        if (!this.#interactive) return;
         this.#changeBg(this.#colorOver);
       });
 
       this.el.addEventListener("mouseup", () => {
-        if (!this.#isInteractive) return;
+        if (!this.#interactive) return;
         this.#changeBg(this.#colorOver);
       });
 
       this.el.addEventListener("mouseout", () => {
-        if (!this.#isInteractive) return;
+        if (!this.#interactive) return;
         this.#changeBg(this.#colorUp);
       });
 
       this.el.addEventListener("mousedown", () => {
-        if (!this.#isInteractive) return;
+        if (!this.#interactive) return;
         this.#changeBg(this.#colorDown);
       });
 
       this.el.addEventListener("click", () => {
-        if (!this.#isInteractive) return;
+        if (!this.#interactive) return;
         this.onRequestSwap(this.#idx);
       });
     }
@@ -145,29 +152,30 @@ appElement.appendChild(app.canvas);
 const background = new p.Graphics()
   .rect(0, 0, gameSize, gameSize)
   .fill({ color: "gray" });
+
 app.stage.addChild(background);
 
 const boardContainer = new p.Container();
 boardContainer.position.set(padding, padding);
 
-app.stage.addChild(boardContainer);
-
 const cells: CellElement[] = [];
 
 initialState.board.forEach((cell, i) => {
+  const { swappables, isSolved } = initialState;
   const idx = i as Idx;
-  const isInteractive = initialState.swappables.includes(idx);
-  const cellElement = new CellElement(idx, cell, isInteractive);
+  const interactive = !isSolved && swappables.includes(idx);
+  const cellElement = new CellElement(idx, cell, interactive);
   cellElement.onRequestSwap = requestSwap;
   cells.push(cellElement);
 });
 
 state$.subscribe(async (state) => {
-  const { swappables } = state;
+  const { swappables, isSolved } = state;
   const [nextSwap] = state.swaps;
 
   cells.forEach((cellElement) => {
-    cellElement.interactive = !nextSwap && swappables.includes(cellElement.idx);
+    cellElement.interactive =
+      !nextSwap && !isSolved && swappables.includes(cellElement.idx);
   });
 
   if (!nextSwap) {
@@ -186,4 +194,9 @@ state$.subscribe(async (state) => {
   applyNextSwap();
 });
 
+const shuffleButton = new ShuffleButton();
+
+app.stage.addChild(boardContainer);
 boardContainer.addChild(...[...cells.values()].map((c) => c.el));
+
+app.stage.addChild(shuffleButton.el);
