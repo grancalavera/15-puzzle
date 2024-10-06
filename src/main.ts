@@ -6,35 +6,52 @@ import { PixiPlugin } from "gsap/PixiPlugin";
 import * as p from "pixi.js";
 import { Application } from "pixi.js";
 import { Cell, getColIdx, getRowIdx, gridCount, Idx, isBlank } from "./model";
-import { applyNextSwap, hasSwaps, initialState, state$, swap } from "./state";
+import { applyNextSwap, initialState, requestSwap, state$ } from "./state";
+
+async function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 const getCellPosByIdx = (idx: Idx) => ({
   x: getColIdx(idx) * (cellSize + gap),
   y: getRowIdx(idx) * (cellSize + gap),
 });
+
 class CellElement {
   el: p.Container;
 
   #idx: Idx;
   #isBlank: boolean;
-  #isSwappable: boolean;
-  #isSolved: boolean;
+  #isInteractive: boolean;
   #bg: p.Graphics | undefined;
 
   #colorOver: p.ColorSource = 0xfefab7;
   #colorUp: p.ColorSource = "white";
   #colorDown: p.ColorSource = 0xdcd8a4;
-  #colorBlank: p.ColorSource = "gray";
+  #colorBlank: p.ColorSource = "pink";
 
   onSwap: (idx: Idx) => void = () => {};
 
-  update(idx: Idx, isSwappable: boolean, isSolved: boolean) {
-    this.#idx = idx;
-    this.#isSwappable = isSwappable;
-    this.#isSolved = isSolved;
-    const { x, y } = getCellPosByIdx(idx);
-    this.el.position.set(x, y);
+  set interactive(value: boolean) {
+    this.#isInteractive = value && !this.#isBlank;
     this.#resetBg();
+  }
+
+  get interactive() {
+    return this.#isInteractive;
+  }
+
+  get idx() {
+    return this.#idx;
+  }
+
+  async swap(idx: Idx): Promise<Idx> {
+    if (this.#idx === idx) return idx;
+    this.#idx = idx;
+    const { x, y } = getCellPosByIdx(this.#idx);
+    this.el.position.set(x, y);
+    await wait(250);
+    return idx;
   }
 
   #changeBg(color: p.ColorSource) {
@@ -44,19 +61,14 @@ class CellElement {
     this.el.addChild(this.#bg);
   }
 
-  get #isInteractive() {
-    return !this.#isBlank && this.#isSwappable; //&& !this.#isSolved;
-  }
-
   #resetBg() {
     this.#changeBg(this.#isBlank ? this.#colorBlank : this.#colorUp);
   }
 
-  constructor(idx: Idx, cell: Cell, isSwappable: boolean, isSolved: boolean) {
+  constructor(idx: Idx, cell: Cell, interactive: boolean) {
     this.#idx = idx;
     this.#isBlank = isBlank(cell);
-    this.#isSwappable = isSwappable;
-    this.#isSolved = isSolved;
+    this.#isInteractive = interactive && !this.#isBlank;
 
     const { x, y } = getCellPosByIdx(idx);
     this.el = new p.Container();
@@ -66,7 +78,7 @@ class CellElement {
     this.#resetBg();
 
     if (!this.#isBlank) {
-      const label = new p.Text({ text: (cell + 1).toString() });
+      const label = new p.Text({ text: cell.toString() });
       label.anchor.set(0.5);
       label.zIndex = 1;
       label.position.set(cellSize / 2, cellSize / 2);
@@ -132,36 +144,38 @@ boardContainer.position.set(padding, padding);
 
 app.stage.addChild(boardContainer);
 
-const cellMap = new Map<Cell, CellElement>();
+const cells: CellElement[] = [];
 
 initialState.board.forEach((cell, i) => {
   const idx = i as Idx;
-  const isSwappable = initialState.swappables.includes(idx);
-  const cellElement = new CellElement(
-    idx,
-    cell,
-    isSwappable,
-    initialState.isSolved
-  );
-  cellElement.onSwap = swap;
-  cellMap.set(cell, cellElement);
+  const isInteractive = initialState.swappables.includes(idx);
+  const cellElement = new CellElement(idx, cell, isInteractive);
+  cellElement.onSwap = requestSwap;
+  cells.push(cellElement);
 });
 
-state$.subscribe((state) => {
-  const { board, swappables, isSolved } = state;
-  const swaps = hasSwaps(state);
+state$.subscribe(async (state) => {
+  const { swappables } = state;
+  const [nextSwap] = state.swaps;
 
-  board.forEach((cell, i) => {
-    const idx = i as Idx;
-    const isSwappable = swappables.includes(idx) && !swaps;
-    const cellElement = cellMap.get(cell);
-    if (!cellElement) return;
-    cellElement.update(idx, isSwappable, isSolved);
+  cells.forEach((cellElement) => {
+    cellElement.interactive = !nextSwap && swappables.includes(cellElement.idx);
   });
 
-  if (state.hasSwaps) {
-    applyNextSwap(state.swaps);
+  if (!nextSwap) {
+    return;
   }
+
+  await Promise.all(
+    cells
+      .filter((x) => nextSwap.includes(x.idx))
+      .map((x) => {
+        const idx = x.idx === nextSwap[0] ? nextSwap[1] : nextSwap[0];
+        return x.swap(idx);
+      })
+  );
+
+  applyNextSwap();
 });
 
-boardContainer.addChild(...[...cellMap.values()].map((c) => c.el));
+boardContainer.addChild(...[...cells.values()].map((c) => c.el));
