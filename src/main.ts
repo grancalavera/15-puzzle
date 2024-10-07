@@ -5,25 +5,34 @@ import { gsap } from "gsap";
 import { PixiPlugin } from "gsap/PixiPlugin";
 import * as p from "pixi.js";
 import { Application } from "pixi.js";
-import { Cell, getColIdx, getRowIdx, gridCount, Idx, isBlank } from "./model";
+import {
+  cellSize,
+  contentWidth,
+  gameHeight,
+  gameWidth,
+  gap,
+  padding,
+} from "./dimensions";
+import { Cell, getColIdx, getRowIdx, Idx, isBlank } from "./model";
 import { applyNextSwap, initialState, requestSwap, state$ } from "./state";
+import { Button, Label } from "./components";
 
 const getCellPosByIdx = (idx: Idx) => ({
   x: getColIdx(idx) * (cellSize + gap),
   y: getRowIdx(idx) * (cellSize + gap),
 });
 
-class ShuffleButton {
-  el: p.Container;
-  constructor() {
-    this.el = new p.Container();
-    const bg = new p.Graphics()
-      .rect(padding, padding, cellSize * 4 + gap * 3, cellSize * 4 + gap * 3)
-      .fill({ color: "white", alpha: 0.9 });
-    bg.zIndex = 100;
-    this.el.addChild(bg);
-  }
-}
+// class ShuffleButton {
+//   el: p.Container;
+//   constructor() {
+//     this.el = new p.Container();
+//     const bg = new p.Graphics()
+//       .rect(padding, padding, cellSize * 4 + gap * 3, cellSize * 4 + gap * 3)
+//       .fill({ color: "white", alpha: 0.9 });
+//     bg.zIndex = 100;
+//     this.el.addChild(bg);
+//   }
+// }
 
 class CellElement {
   el: p.Container;
@@ -134,15 +143,9 @@ PixiPlugin.registerPIXI(p);
 
 const app = new Application();
 initDevtools({ app });
-
-const gap = 2;
-const padding = 8;
-const cellSize = 100;
-const gameSize = cellSize * gridCount + gap * (gridCount - 1) + padding * 2;
-
 await app.init({
-  width: gameSize,
-  height: gameSize,
+  width: gameWidth,
+  height: gameHeight,
   backgroundColor: "bisque",
 });
 
@@ -150,7 +153,7 @@ const appElement = document.querySelector<HTMLDivElement>("#app")!;
 appElement.appendChild(app.canvas);
 
 const background = new p.Graphics()
-  .rect(0, 0, gameSize, gameSize)
+  .rect(0, 0, gameWidth, gameHeight)
   .fill({ color: "gray" });
 
 app.stage.addChild(background);
@@ -159,6 +162,21 @@ const boardContainer = new p.Container();
 boardContainer.position.set(padding, padding);
 
 const cells: CellElement[] = [];
+
+const shuffleButton = new Button({
+  style: {
+    disabledColor: 0xdddddd,
+    overColor: 0xfefab7,
+    downColor: 0xdcd8a4,
+    upColor: "white",
+  },
+  width: contentWidth,
+  height: cellSize,
+  text: "Shuffle",
+  onClick: () => {
+    requestSwap(11);
+  },
+});
 
 initialState.board.forEach((cell, i) => {
   const { swappables, isSolved } = initialState;
@@ -194,9 +212,8 @@ state$.subscribe(async (state) => {
   applyNextSwap();
 });
 
-const shuffleButton = new ShuffleButton();
-
 app.stage.addChild(boardContainer);
 boardContainer.addChild(...[...cells.values()].map((c) => c.el));
 
-app.stage.addChild(shuffleButton.el);
+shuffleButton.root.position.set(padding, gameHeight - padding - cellSize);
+app.stage.addChild(shuffleButton.root);
