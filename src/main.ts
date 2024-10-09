@@ -5,6 +5,8 @@ import { gsap } from "gsap";
 import { PixiPlugin } from "gsap/PixiPlugin";
 import * as p from "pixi.js";
 import { Application } from "pixi.js";
+import { assertNever } from "./assertNever";
+import { Box } from "./components/Box";
 import { Button } from "./components/Button";
 import {
   BlankTile,
@@ -19,14 +21,15 @@ import {
   gameWidth,
   padding,
 } from "./dimensions";
-import { Idx, isBlank } from "./model";
-import { applyNextSwap, initialState, requestSwap, state$ } from "./state";
+import { Idx, isBlank, Swap } from "./model";
+import { beginSwap, endSwap, initialState, state$ } from "./state";
 
 gsap.registerPlugin(PixiPlugin);
 PixiPlugin.registerPIXI(p);
 
 const app = new Application();
 initDevtools({ app });
+
 await app.init({
   width: gameWidth,
   height: gameHeight,
@@ -34,13 +37,12 @@ await app.init({
 });
 
 const appElement = document.querySelector<HTMLDivElement>("#app")!;
-appElement.appendChild(app.canvas);
 
-const background = new p.Graphics()
-  .rect(0, 0, gameWidth, gameHeight)
-  .fill({ color: "gray" });
-
-app.stage.addChild(background);
+const background = new Box({
+  bgColor: "gray",
+  width: gameWidth,
+  height: gameHeight,
+});
 
 const gameContent = new p.Container();
 gameContent.position.set(padding, padding);
@@ -57,52 +59,84 @@ const shuffleButton = new Button({
   width: contentWidth,
   height: cellSize,
   text: "Shuffle",
-  onClick: () => {
-    requestSwap(11);
-  },
+  onClick: () => beginSwap(11),
 });
+shuffleButton.root.position.set(padding, gameHeight - padding - cellSize);
 
 initialState.board.forEach((cell, i) => {
-  const { swappables, isSolved } = initialState;
   const idx = i as Idx;
+  const enabled =
+    initialState.kind === "NotSolved" && initialState.swappables.includes(idx);
+
   const options: SwappableTileOptions = {
     idx,
     cell,
-    disabled: !swappables.includes(idx) || isSolved,
-    onRequestSwap: requestSwap,
+    disabled: !enabled,
+    onSwap: beginSwap,
   };
 
-  const tile = isBlank(cell) ? new BlankTile(options) : new Tile(options);
-  tile.onRequestSwap = requestSwap;
+  const tile: SwappableTile = isBlank(cell)
+    ? new BlankTile(options)
+    : new Tile(options);
+
   tiles.push(tile);
 });
 
-state$.subscribe(async (state) => {
-  const { swappables, isSolved } = state;
-  const [nextSwap] = state.swaps;
+const swapTiles = async (swaps: Swap[]): Promise<void> => {
+  const [next, ...rest] = swaps;
 
-  tiles.forEach((tile) => {
-    tile.disabled = !swappables.includes(tile.idx) || nextSwap || isSolved;
-  });
-
-  if (!nextSwap) {
+  if (!next) {
     return;
   }
 
+  const [first, second] = next;
+
   await Promise.all(
     tiles
-      .filter((x) => nextSwap.includes(x.idx))
-      .map((x) => {
-        const idx = x.idx === nextSwap[0] ? nextSwap[1] : nextSwap[0];
-        return x.swap(idx);
-      })
+      .filter((tile) => next.includes(tile.idx))
+      .map((tile) => tile.swap(tile.idx === first ? second : first))
   );
 
-  applyNextSwap();
+  await swapTiles(rest);
+};
+
+const disableAllTiles = () => {
+  tiles.forEach((tile) => {
+    tile.disabled = true;
+  });
+};
+
+const enableSwappableTiles = (swappables: Idx[]) => {
+  tiles.forEach((tile) => {
+    tile.disabled = !swappables.includes(tile.idx);
+  });
+};
+
+state$.subscribe(async (state) => {
+  switch (state.kind) {
+    case "NotSolved": {
+      const { swappables } = state;
+      enableSwappableTiles(swappables);
+      return;
+    }
+    case "Solved": {
+      return;
+    }
+    case "Swapping": {
+      disableAllTiles();
+      const { swaps } = state;
+      await swapTiles(swaps);
+      endSwap();
+      return;
+    }
+    default: {
+      assertNever(state);
+    }
+  }
 });
 
+appElement.appendChild(app.canvas);
+app.stage.addChild(background.root);
 app.stage.addChild(gameContent);
 gameContent.addChild(...[...tiles.values()].map((tile) => tile.root));
-
-shuffleButton.root.position.set(padding, gameHeight - padding - cellSize);
 app.stage.addChild(shuffleButton.root);

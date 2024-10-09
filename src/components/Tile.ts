@@ -6,7 +6,7 @@ import { Box, WithContainerChild } from "./Box";
 import { Button } from "./Button";
 
 export type SwappableTileOptions = {
-  onRequestSwap: (idx: Idx) => void;
+  onSwap: (idx: Idx) => void;
   disabled?: boolean;
   idx: Idx;
   cell: Cell;
@@ -14,8 +14,8 @@ export type SwappableTileOptions = {
 
 export type SwappableTile = WithContainerChild & {
   readonly idx: Idx;
+  readonly cell: Cell;
   disabled: boolean;
-  onRequestSwap: (idx: Idx) => void;
   swap(idx: Idx): Promise<Idx>;
 };
 
@@ -36,18 +36,18 @@ export class BlankTile implements SwappableTile {
     this.#root.interactive = !value;
   }
 
-  onRequestSwap: (idx: Idx) => void = () => {};
-
   #root: ContainerChild;
   #idx: Idx;
   #bg: Box;
+  readonly cell: Cell;
 
-  constructor({ idx }: SwappableTileOptions) {
+  constructor({ idx, cell }: SwappableTileOptions) {
     this.#root = new Container();
     this.#idx = idx;
     const { x, y } = getCellPosByIdx(idx);
     this.#root.position.set(x, y);
     this.#root.zIndex = 0;
+    this.cell = cell;
 
     this.#bg = new Box({
       bgColor: "gray",
@@ -73,18 +73,18 @@ export class Tile implements SwappableTile {
     return this.#root;
   }
 
-  onRequestSwap: (idx: Idx) => void = () => {};
-
   #root: ContainerChild;
   #idx: Idx;
   #button: Button;
+  readonly cell: Cell;
 
-  constructor({ idx, cell, disabled }: SwappableTileOptions) {
+  constructor({ idx, cell, disabled, onSwap }: SwappableTileOptions) {
     this.#root = new Container();
     this.#idx = idx;
     const { x, y } = getCellPosByIdx(idx);
     this.#root.position.set(x, y);
     this.#root.zIndex = 1;
+    this.cell = cell;
 
     this.#button = new Button({
       text: cell.toString(),
@@ -97,7 +97,7 @@ export class Tile implements SwappableTile {
       },
       height: cellSize,
       width: cellSize,
-      onClick: () => this.onRequestSwap(this.#idx),
+      onClick: () => onSwap(this.#idx),
     });
 
     this.#root.addChild(this.#button.root);
