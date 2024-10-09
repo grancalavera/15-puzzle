@@ -3,7 +3,7 @@ import { assertNever } from "./assertNever";
 import { mergeWithKey } from "./mergeWithKey";
 import {
   _,
-  applySwap,
+  applyOneSwap,
   Board,
   getSwappables,
   getSwaps,
@@ -13,6 +13,29 @@ import {
   Swappables,
 } from "./model";
 import { isEqual } from "lodash";
+
+type State = NotSolved | Solved | Swapping;
+
+type NotSolved = {
+  kind: "NotSolved";
+  board: Board;
+  swappables: Swappables;
+};
+
+type Solved = {
+  kind: "Solved";
+  board: Board;
+};
+
+// Update the board with the result of applying all swaps
+// and then return the new state with the list of pending swaps.
+// Each swap application must change idx in each tile because
+// subsequent swaps depend on the swapped idx in each tile.
+type Swapping = {
+  kind: "Swapping";
+  board: Board;
+  swaps: Swap[];
+};
 
 type GameState = PrimaryState & DerivedState;
 
@@ -76,7 +99,7 @@ export const state$ = action$.pipe(
       case "applyNextSwap$": {
         const [nextSwap, ...swaps] = state.swaps;
         if (!nextSwap) return state;
-        const board = applySwap(state.board, nextSwap);
+        const board = applyOneSwap(state.board, nextSwap);
         return update(state, { board, swaps });
       }
 

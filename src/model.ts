@@ -86,10 +86,10 @@ const swapVertically = (blankIdx: Idx, cellIdx: Idx): Swap[] => {
   ]);
 };
 
-export const previewSwaps = (board: Board, swaps: [Idx, Idx][]): Board =>
-  swaps.reduce(applySwap, board);
+export const applyAllSwaps = (board: Board, swaps: [Idx, Idx][]): Board =>
+  swaps.reduce(applyOneSwap, board);
 
-export const applySwap = (board: Board, [from, to]: Swap): Board => {
+export const applyOneSwap = (board: Board, [from, to]: Swap): Board => {
   const draft = [...board];
   const temp = draft[from]!;
   draft[from] = draft[to]!;

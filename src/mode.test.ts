@@ -2,7 +2,7 @@ import {
   _,
   Board,
   isSolved,
-  previewSwaps,
+  applyAllSwaps,
   Swap,
   getSwappables,
   Swappables,
@@ -60,7 +60,7 @@ describe("swapping cells", () => {
       });
 
       it("preview", () => {
-        const actual = previewSwaps(board, expectedSwaps);
+        const actual = applyAllSwaps(board, expectedSwaps);
         expect(actual).toEqual(expectedPreview);
       });
     });
@@ -84,7 +84,7 @@ describe("swapping cells", () => {
       });
 
       it("preview", () => {
-        const actual = previewSwaps(board, expectedSwaps);
+        const actual = applyAllSwaps(board, expectedSwaps);
         expect(actual).toEqual(expectedPreview);
       });
     });
@@ -109,7 +109,7 @@ describe("swapping cells", () => {
       });
 
       it("preview", () => {
-        const actual = previewSwaps(board, expectedSwaps);
+        const actual = applyAllSwaps(board, expectedSwaps);
         expect(actual).toEqual(expectedPreview);
       });
     });
@@ -130,7 +130,7 @@ describe("swapping cells", () => {
       });
 
       it("preview", () => {
-        const actual = previewSwaps(board, expectedSwaps);
+        const actual = applyAllSwaps(board, expectedSwaps);
         expect(actual).toEqual(expectedPreview);
       });
     });
@@ -154,7 +154,7 @@ describe("swapping cells", () => {
       });
 
       it("preview", () => {
-        const actual = previewSwaps(board, expectedSwaps);
+        const actual = applyAllSwaps(board, expectedSwaps);
         expect(actual).toEqual(expectedPreview);
       });
     });
@@ -179,7 +179,7 @@ describe("swapping cells", () => {
       });
 
       it("preview", () => {
-        const actual = previewSwaps(board, expectedSwaps);
+        const actual = applyAllSwaps(board, expectedSwaps);
         expect(actual).toEqual(expectedPreview);
       });
     });
@@ -213,7 +213,7 @@ describe("swapping cells", () => {
       });
 
       it("preview", () => {
-        const actual = previewSwaps(board, expectedSwaps);
+        const actual = applyAllSwaps(board, expectedSwaps);
         expect(actual).toEqual(expectedBoard);
       });
     });
@@ -237,7 +237,7 @@ describe("swapping cells", () => {
       });
 
       it("preview", () => {
-        const actual = previewSwaps(board, expectedSwaps);
+        const actual = applyAllSwaps(board, expectedSwaps);
         expect(actual).toEqual(expectedBoard);
       });
     });
@@ -262,7 +262,7 @@ describe("swapping cells", () => {
       });
 
       it("preview", () => {
-        const actual = previewSwaps(board, expectedSwaps);
+        const actual = applyAllSwaps(board, expectedSwaps);
         expect(actual).toEqual(expectedBoard);
       });
     });
@@ -283,7 +283,7 @@ describe("swapping cells", () => {
       });
 
       it("preview", () => {
-        const actual = previewSwaps(board, expectedSwaps);
+        const actual = applyAllSwaps(board, expectedSwaps);
         expect(actual).toEqual(expectedPreview);
       });
     });
@@ -307,7 +307,7 @@ describe("swapping cells", () => {
       });
 
       it("preview", () => {
-        const actual = previewSwaps(board, expectedSwaps);
+        const actual = applyAllSwaps(board, expectedSwaps);
         expect(actual).toEqual(expectedBoard);
       });
     });
@@ -332,7 +332,7 @@ describe("swapping cells", () => {
       });
 
       it("preview", () => {
-        const actual = previewSwaps(board, expectedSwaps);
+        const actual = applyAllSwaps(board, expectedSwaps);
         expect(actual).toEqual(expectedBoard);
       });
     });
