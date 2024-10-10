@@ -1,6 +1,6 @@
 import { gsap } from "gsap";
 import { Container, ContainerChild } from "pixi.js";
-import { cellSize, gap } from "../dimensions";
+import { cellSize, gap, swapSpeed } from "../settings";
 import { Cell, getColIdx, getRowIdx, Idx } from "../model";
 import { Box, WithContainerChild } from "./Box";
 import { Button } from "./Button";
@@ -169,7 +169,7 @@ const swapTile = async (
   await gsap
     .to(tile.root, {
       pixi: getCellPosByIdx(idx),
-      duration: speed === "slow" ? 0.15 : 0.01,
+      duration: swapSpeed[speed],
       // https://gsap.com/docs/v3/Eases
       ease: "power3.inOut",
     })

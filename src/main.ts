@@ -20,8 +20,9 @@ import {
   contentWidth,
   gameHeight,
   gameWidth,
+  gap,
   padding,
-} from "./dimensions";
+} from "./settings";
 import { Idx, isBlank, Swap } from "./model";
 import {
   beginShuffle,
@@ -57,6 +58,7 @@ gameContent.position.set(padding, padding);
 
 const tiles: SwappableTile[] = [];
 
+const buttonWidth = contentWidth / 2 - gap / 2;
 const shuffleButton = new Button({
   style: {
     disabledColor: 0xdddddd,
@@ -64,12 +66,29 @@ const shuffleButton = new Button({
     downColor: 0xdcd8a4,
     upColor: "white",
   },
-  width: contentWidth,
+  width: buttonWidth,
   height: cellSize,
   text: "Shuffle",
   onClick: beginShuffle,
 });
 shuffleButton.root.position.set(padding, gameHeight - padding - cellSize);
+
+const solveButton = new Button({
+  style: {
+    disabledColor: 0xdddddd,
+    overColor: 0xfefab7,
+    downColor: 0xdcd8a4,
+    upColor: "white",
+  },
+  width: buttonWidth,
+  height: cellSize,
+  text: "Solve",
+  onClick: beginShuffle,
+});
+solveButton.root.position.set(
+  padding + gap + buttonWidth,
+  gameHeight - padding - cellSize
+);
 
 initialState.board.forEach((cell, i) => {
   const idx = i as Idx;
@@ -161,3 +180,4 @@ app.stage.addChild(background.root);
 app.stage.addChild(gameContent);
 gameContent.addChild(...[...tiles.values()].map((tile) => tile.root));
 app.stage.addChild(shuffleButton.root);
+app.stage.addChild(solveButton.root);
