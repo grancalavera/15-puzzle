@@ -26,11 +26,10 @@ stateDiagram
     c3 --> c: notSolved
     c3 --> a: solved
 
-    %% later on if everything works
-    %% e: Solving (e)
-    %% state c4 <<choice>>
-    %% c --> e: requestSolve
-    %% e --> c4: popHistory
-    %% c4 --> e: hasHistory
-    %% c4 --> a: solved
+    e: Solving (e)
+    state c4 <<choice>>
+    c --> e: requestSolve
+    e --> c4: popHistory
+    c4 --> e: hasHistory
+    c4 --> a: solved
 ```
