@@ -12,6 +12,7 @@ import {
   BlankTile,
   SwappableTile,
   SwappableTileOptions,
+  SwapSpeed,
   Tile,
 } from "./components/Tile";
 import {
@@ -22,7 +23,14 @@ import {
   padding,
 } from "./dimensions";
 import { Idx, isBlank, Swap } from "./model";
-import { beginSwap, endSwap, initialState, state$ } from "./state";
+import {
+  beginShuffle,
+  beginSwap,
+  endShuffle,
+  endSwap,
+  initialState,
+  state$,
+} from "./state";
 
 gsap.registerPlugin(PixiPlugin);
 PixiPlugin.registerPIXI(p);
@@ -59,7 +67,7 @@ const shuffleButton = new Button({
   width: contentWidth,
   height: cellSize,
   text: "Shuffle",
-  onClick: () => beginSwap(11),
+  onClick: beginShuffle,
 });
 shuffleButton.root.position.set(padding, gameHeight - padding - cellSize);
 
@@ -79,10 +87,11 @@ initialState.board.forEach((cell, i) => {
     ? new BlankTile(options)
     : new Tile(options);
 
+  tile.solved = initialState.kind === "Solved";
   tiles.push(tile);
 });
 
-const swapTiles = async (swaps: Swap[]): Promise<void> => {
+const swapTiles = async (swaps: Swap[], speed: SwapSpeed): Promise<void> => {
   const [next, ...rest] = swaps;
 
   if (!next) {
@@ -94,15 +103,16 @@ const swapTiles = async (swaps: Swap[]): Promise<void> => {
   await Promise.all(
     tiles
       .filter((tile) => next.includes(tile.idx))
-      .map((tile) => tile.swap(tile.idx === first ? second : first))
+      .map((tile) => tile.swap(tile.idx === first ? second : first, speed))
   );
 
-  await swapTiles(rest);
+  await swapTiles(rest, speed);
 };
 
-const disableAllTiles = () => {
+const disableAllTiles = (solve?: boolean) => {
   tiles.forEach((tile) => {
     tile.disabled = true;
+    tile.solved = !!solve;
   });
 };
 
@@ -113,6 +123,8 @@ const enableSwappableTiles = (swappables: Idx[]) => {
 };
 
 state$.subscribe(async (state) => {
+  shuffleButton.disabled = true;
+
   switch (state.kind) {
     case "NotSolved": {
       const { swappables } = state;
@@ -120,13 +132,22 @@ state$.subscribe(async (state) => {
       return;
     }
     case "Solved": {
+      disableAllTiles(true);
+      shuffleButton.disabled = false;
       return;
     }
     case "Swapping": {
-      disableAllTiles();
       const { swaps } = state;
-      await swapTiles(swaps);
+      disableAllTiles();
+      await swapTiles(swaps, "slow");
       endSwap();
+      return;
+    }
+    case "Shuffling": {
+      const { shuffles } = state;
+      disableAllTiles();
+      await swapTiles(shuffles, "fast");
+      endShuffle();
       return;
     }
     default: {

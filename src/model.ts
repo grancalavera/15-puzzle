@@ -170,6 +170,23 @@ export const getSwappables = (board: Board): Swappables => {
 };
 
 export const getRandomSwaps = (board: Board): Swap[] => {
-  const idx = choose(getSwappables(board));
+  const swappables = getSwappables(board);
+  const idx = choose(swappables);
   return getSwaps(board, idx);
+};
+
+export const shuffleBoard = (board: Board, count: number): [Board, Swap[]] => {
+  const shuffles: Swap[] = [];
+
+  let remaining = count;
+  let shuffledBoard = board;
+
+  while (remaining > 0) {
+    const swaps = getRandomSwaps(shuffledBoard);
+    shuffles.push(...swaps);
+    shuffledBoard = applyAllSwaps(shuffledBoard, swaps);
+    remaining--;
+  }
+
+  return [shuffledBoard, shuffles];
 };

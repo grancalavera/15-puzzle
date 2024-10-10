@@ -53,7 +53,7 @@ export class Button {
     this.#root.addEventListener("mouseout", this.#handleOut);
     this.#root.addEventListener("mousedown", this.#handleDown);
     this.#root.addEventListener("mouseup", this.#handleUp);
-    this.#root.addEventListener("click", this.#handleClick);
+    this.#root.addEventListener("pointerdown", this.#handleClick);
 
     this.#label = new Label({ ...labelOptions, bgColor: style.upColor });
     this.#root.addChild(this.#label.root);
