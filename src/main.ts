@@ -15,28 +15,32 @@ import {
   SwapSpeed,
   Tile,
 } from "./components/Tile";
+import { Idx, isBlank, Swap } from "./model";
 import {
+  buttonWidth,
   cellSize,
-  contentWidth,
   gameHeight,
   gameWidth,
   gap,
   padding,
 } from "./settings";
-import { Idx, isBlank, Swap } from "./model";
 import {
   beginShuffle,
+  beginSolve,
   beginSwap,
   endShuffle,
+  endSolve,
   endSwap,
   initialState,
   state$,
 } from "./state";
 
 gsap.registerPlugin(PixiPlugin);
+
 PixiPlugin.registerPIXI(p);
 
 const app = new Application();
+
 initDevtools({ app });
 
 await app.init({
@@ -45,7 +49,7 @@ await app.init({
   backgroundColor: "bisque",
 });
 
-const appElement = document.querySelector<HTMLDivElement>("#app")!;
+document.querySelector<HTMLDivElement>("#app")!.appendChild(app.canvas);
 
 const background = new Box({
   bgColor: "gray",
@@ -56,9 +60,6 @@ const background = new Box({
 const gameContent = new p.Container();
 gameContent.position.set(padding, padding);
 
-const tiles: SwappableTile[] = [];
-
-const buttonWidth = contentWidth / 2 - gap / 2;
 const shuffleButton = new Button({
   style: {
     disabledColor: 0xdddddd,
@@ -83,14 +84,15 @@ const solveButton = new Button({
   width: buttonWidth,
   height: cellSize,
   text: "Solve",
-  onClick: beginShuffle,
+  onClick: beginSolve,
 });
+
 solveButton.root.position.set(
   padding + gap + buttonWidth,
   gameHeight - padding - cellSize
 );
 
-initialState.board.forEach((cell, i) => {
+const tiles: SwappableTile[] = initialState.board.map((cell, i) => {
   const idx = i as Idx;
   const enabled =
     initialState.kind === "NotSolved" && initialState.swappables.includes(idx);
@@ -107,15 +109,18 @@ initialState.board.forEach((cell, i) => {
     : new Tile(options);
 
   tile.solved = initialState.kind === "Solved";
-  tiles.push(tile);
+
+  return tile;
 });
+
+const isSolved = initialState.kind === "Solved";
+solveButton.disabled = isSolved;
+shuffleButton.disabled = !isSolved;
 
 const swapTiles = async (swaps: Swap[], speed: SwapSpeed): Promise<void> => {
   const [next, ...rest] = swaps;
 
-  if (!next) {
-    return;
-  }
+  if (!next) return;
 
   const [first, second] = next;
 
@@ -143,11 +148,13 @@ const enableSwappableTiles = (swappables: Idx[]) => {
 
 state$.subscribe(async (state) => {
   shuffleButton.disabled = true;
+  solveButton.disabled = true;
 
   switch (state.kind) {
     case "NotSolved": {
       const { swappables } = state;
       enableSwappableTiles(swappables);
+      solveButton.disabled = false;
       return;
     }
     case "Solved": {
@@ -169,15 +176,21 @@ state$.subscribe(async (state) => {
       endShuffle();
       return;
     }
+    case "Solving": {
+      const { solution } = state;
+      disableAllTiles();
+      await swapTiles(solution, "fast");
+      endSolve();
+      return;
+    }
     default: {
       assertNever(state);
     }
   }
 });
 
-appElement.appendChild(app.canvas);
 app.stage.addChild(background.root);
-app.stage.addChild(gameContent);
-gameContent.addChild(...[...tiles.values()].map((tile) => tile.root));
 app.stage.addChild(shuffleButton.root);
 app.stage.addChild(solveButton.root);
+app.stage.addChild(gameContent);
+tiles.forEach((tile) => gameContent.addChild(tile.root));

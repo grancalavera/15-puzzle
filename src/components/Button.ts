@@ -5,6 +5,8 @@ type ButtonOptions = Omit<LabelOptions, "bgColor"> & {
   style: ButtonStyle;
   onClick?: () => void;
   disabled?: boolean;
+  x?: number;
+  y?: number;
 };
 
 type ButtonStyle = {
@@ -43,18 +45,17 @@ export class Button {
   #handleClick = () => this.onClick();
 
   constructor(options: ButtonOptions) {
-    const { style, onClick, disabled, ...labelOptions } = options;
+    const { style, onClick, disabled, x, y, ...labelOptions } = options;
     this.#style = style;
     this.onClick = onClick ?? this.onClick;
 
     this.#root = new Container();
-    this.#root.interactive = true;
+    this.#root.position.set(x, y);
     this.#root.addEventListener("mouseover", this.#handleOver);
     this.#root.addEventListener("mouseout", this.#handleOut);
     this.#root.addEventListener("mousedown", this.#handleDown);
     this.#root.addEventListener("mouseup", this.#handleUp);
     this.#root.addEventListener("pointerdown", this.#handleClick);
-
     this.#label = new Label({ ...labelOptions, bgColor: style.upColor });
     this.#root.addChild(this.#label.root);
 

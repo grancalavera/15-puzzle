@@ -13,19 +13,29 @@ import {
   Swap,
   Swappables,
 } from "./model";
+import { shuffleCount } from "./settings";
 
-export type GameState = NotSolved | Solved | Swapping | Shuffling;
+export type GameState = NotSolved | Solved | Swapping | Shuffling | Solving;
 
 type NotSolved = {
   kind: "NotSolved";
   board: Board;
   swappables: Swappables;
+  history: Swap[];
 };
 
 type Swapping = {
   kind: "Swapping";
   board: Board;
   swaps: Swap[];
+  history: Swap[];
+};
+
+type Shuffling = {
+  kind: "Shuffling";
+  board: Board;
+  shuffles: Swap[];
+  history: Swap[];
 };
 
 type Solved = {
@@ -33,16 +43,18 @@ type Solved = {
   board: Board;
 };
 
-type Shuffling = {
-  kind: "Shuffling";
+type Solving = {
+  kind: "Solving";
   board: Board;
-  shuffles: Swap[];
+  // reversed history
+  solution: Swap[];
 };
 
-const notSolved = (board: Board): GameState => ({
+const notSolved = (board: Board, history: Swap[]): GameState => ({
   kind: "NotSolved",
   board,
   swappables: getSwappables(board),
+  history,
 });
 
 const solved: GameState = {
@@ -55,21 +67,23 @@ const solved: GameState = {
   ] as Board,
 };
 
-const swapping = (board: Board, idx: Idx): GameState => {
+const swapping = (board: Board, idx: Idx, history: Swap[]): GameState => {
   const swaps = getSwaps(board, idx);
   return {
     kind: "Swapping",
     board: applyAllSwaps(board, swaps),
     swaps: swaps,
+    history: [...history, ...swaps],
   };
 };
 
 const shuffling = (board: Board): GameState => {
-  const [shuffledBoard, shuffles] = shuffleBoard(board, 100);
+  const [shuffledBoard, shuffles] = shuffleBoard(board, shuffleCount);
   return {
     kind: "Shuffling",
     board: shuffledBoard,
     shuffles,
+    history: [...shuffles],
   };
 };
 
@@ -77,29 +91,45 @@ const beginSwap$ = new Subject<Idx>();
 const endSwap$ = new Subject<void>();
 const beginShuffle$ = new Subject<void>();
 const endShuffle$ = new Subject<void>();
+const beginSolve$ = new Subject<void>();
+const endSolve$ = new Subject<void>();
 
 export const beginSwap = beginSwap$.next.bind(beginSwap$);
 export const endSwap = endSwap$.next.bind(endSwap$);
 export const beginShuffle = beginShuffle$.next.bind(beginShuffle$);
 export const endShuffle = endShuffle$.next.bind(endShuffle$);
+export const beginSolve = beginSolve$.next.bind(beginSolve$);
+export const endSolve = endSolve$.next.bind(endSolve$);
 
-const fromBoard = (board: Board): GameState =>
-  isSolved(board) ? solved : notSolved(board);
+const stateFromBoard = (board: Board, history: Swap[] = []): GameState =>
+  isSolved(board) ? solved : notSolved(board, history);
 
-export const initialState = fromBoard(solved.board);
+const historyFromState = (state: GameState): Swap[] =>
+  state.kind === "Solved" || state.kind === "Solving" ? [] : state.history;
+
+export const initialState = stateFromBoard([
+  ...[0, 1, 2, 3],
+  ...[4, 5, 6, 7],
+  ...[8, 9, 10, 11],
+  ...[12, 13, 14, _],
+] as Board);
 
 const action$ = mergeWithKey({
   beginSwap$,
   endSwap$,
   beginShuffle$,
   endShuffle$,
+  beginSolve$,
+  endSolve$,
 });
 
 export const state$ = action$.pipe(
   scan((state, action) => {
+    const history = historyFromState(state);
+
     switch (action.type) {
       case "beginSwap$": {
-        return swapping(state.board, action.payload);
+        return swapping(state.board, action.payload, history);
       }
 
       case "beginShuffle$": {
@@ -107,11 +137,24 @@ export const state$ = action$.pipe(
       }
 
       case "endSwap$": {
-        return fromBoard(state.board);
+        return stateFromBoard(state.board, history);
       }
 
       case "endShuffle$": {
-        return fromBoard(state.board);
+        return stateFromBoard(state.board, history);
+      }
+
+      case "beginSolve$": {
+        const solving: Solving = {
+          kind: "Solving",
+          board: solved.board,
+          solution: [...history].reverse(),
+        };
+        return solving;
+      }
+
+      case "endSolve$": {
+        return solved;
       }
 
       default:
