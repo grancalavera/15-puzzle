@@ -47,7 +47,7 @@ describe("swapping cells", () => {
     describe("one vertical swap", () => {
       const expectedSwaps: Swap[] = [[15, 11]];
 
-      const expectedPreview: Board = [
+      const expectedBoard: Board = [
         ...[0, 0, 0, 3],
         ...[0, 0, 0, 4],
         ...[0, 0, 0, _],
@@ -61,7 +61,7 @@ describe("swapping cells", () => {
 
       it("preview", () => {
         const actual = applyAllSwaps(board, expectedSwaps);
-        expect(actual).toEqual(expectedPreview);
+        expect(actual).toEqual(expectedBoard);
       });
     });
 
@@ -71,7 +71,7 @@ describe("swapping cells", () => {
         [11, 7],
       ];
 
-      const expectedPreview: Board = [
+      const expectedBoard: Board = [
         ...[0, 0, 0, 3],
         ...[0, 0, 0, _],
         ...[0, 0, 0, 4],
@@ -85,7 +85,7 @@ describe("swapping cells", () => {
 
       it("preview", () => {
         const actual = applyAllSwaps(board, expectedSwaps);
-        expect(actual).toEqual(expectedPreview);
+        expect(actual).toEqual(expectedBoard);
       });
     });
 
@@ -96,7 +96,7 @@ describe("swapping cells", () => {
         [7, 3],
       ];
 
-      const expectedPreview: Board = [
+      const expectedBoard: Board = [
         ...[0, 0, 0, _],
         ...[0, 0, 0, 3],
         ...[0, 0, 0, 4],
@@ -110,14 +110,14 @@ describe("swapping cells", () => {
 
       it("preview", () => {
         const actual = applyAllSwaps(board, expectedSwaps);
-        expect(actual).toEqual(expectedPreview);
+        expect(actual).toEqual(expectedBoard);
       });
     });
 
     describe("one horizontal swap", () => {
       const expectedSwaps: Swap[] = [[15, 14]];
 
-      const expectedPreview: Board = [
+      const expectedBoard: Board = [
         ...[0, 0, 0, 3],
         ...[0, 0, 0, 4],
         ...[0, 0, 0, 5],
@@ -131,7 +131,7 @@ describe("swapping cells", () => {
 
       it("preview", () => {
         const actual = applyAllSwaps(board, expectedSwaps);
-        expect(actual).toEqual(expectedPreview);
+        expect(actual).toEqual(expectedBoard);
       });
     });
 
@@ -141,7 +141,7 @@ describe("swapping cells", () => {
         [14, 13],
       ];
 
-      const expectedPreview: Board = [
+      const expectedBoard: Board = [
         ...[0, 0, 0, 3],
         ...[0, 0, 0, 4],
         ...[0, 0, 0, 5],
@@ -155,7 +155,7 @@ describe("swapping cells", () => {
 
       it("preview", () => {
         const actual = applyAllSwaps(board, expectedSwaps);
-        expect(actual).toEqual(expectedPreview);
+        expect(actual).toEqual(expectedBoard);
       });
     });
 
@@ -166,7 +166,7 @@ describe("swapping cells", () => {
         [13, 12],
       ];
 
-      const expectedPreview: Board = [
+      const expectedBoard: Board = [
         ...[0, 0, 0, 3],
         ...[0, 0, 0, 4],
         ...[0, 0, 0, 5],
@@ -180,7 +180,7 @@ describe("swapping cells", () => {
 
       it("preview", () => {
         const actual = applyAllSwaps(board, expectedSwaps);
-        expect(actual).toEqual(expectedPreview);
+        expect(actual).toEqual(expectedBoard);
       });
     });
   });
