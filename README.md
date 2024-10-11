@@ -1,5 +1,7 @@
 # 15-puzzle
 
+[Play](https://grancalavera.github.io/15-puzzle/)
+
 ```mermaid
 stateDiagram
     a: Solved (a)
