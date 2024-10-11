@@ -87,6 +87,12 @@ const shuffling = (board: Board): GameState => {
   };
 };
 
+const solving = (history: Swap[]): GameState => ({
+  kind: "Solving",
+  board: solved.board,
+  solution: [...history].reverse(),
+});
+
 const beginSwap$ = new Subject<Idx>();
 const endSwap$ = new Subject<void>();
 const beginShuffle$ = new Subject<void>();
@@ -145,12 +151,7 @@ export const state$ = action$.pipe(
       }
 
       case "beginSolve$": {
-        const solving: Solving = {
-          kind: "Solving",
-          board: solved.board,
-          solution: [...history].reverse(),
-        };
-        return solving;
+        return solving(history);
       }
 
       case "endSolve$": {
