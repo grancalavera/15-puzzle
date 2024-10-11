@@ -24,7 +24,7 @@ export type { Cell, Idx };
 
 export type NonEmptyArray<T> = [T, ...T[]];
 export type Choose<T> = (arr: NonEmptyArray<T>) => T;
-export type Swappables = [Idx, Idx, Idx, Idx, Idx, Idx];
+export type Swappables = NonEmptyArray<Idx>;
 export type Row = [Cell, Cell, Cell, Cell];
 export type Col = [Cell, Cell, Cell, Cell];
 
@@ -57,33 +57,14 @@ export const getSwaps = (board: Board, cellIdx: Idx): Swap[] => {
   const blankIdx = getBlankIdx(board);
   const isCell = blankIdx !== undefined && cellIdx !== blankIdx;
 
-  if (isCell && sameRow(blankIdx, cellIdx)) {
-    return swapHorizontally(blankIdx, cellIdx);
-  }
-
-  if (isCell && sameCol(blankIdx, cellIdx)) {
-    return swapVertically(blankIdx, cellIdx);
+  if (
+    (isCell && isHorizontalNeighbor(blankIdx, cellIdx)) ||
+    isVerticalNeighbor(blankIdx, cellIdx)
+  ) {
+    return [[blankIdx, cellIdx]];
   }
 
   return [];
-};
-
-const swapHorizontally = (blankIdx: Idx, cellIdx: Idx): Swap[] => {
-  const distance = cellIdx - blankIdx;
-  const direction = Math.sign(distance);
-  return [...Array(Math.abs(distance)).keys()].map((stepSize) => [
-    swapColBy(blankIdx, stepSize * direction),
-    swapColBy(blankIdx, stepSize * direction + 1 * direction),
-  ]);
-};
-
-const swapVertically = (blankIdx: Idx, cellIdx: Idx): Swap[] => {
-  const distance = getRowIdx(cellIdx) - getRowIdx(blankIdx);
-  const direction = Math.sign(distance);
-  return [...Array(Math.abs(distance)).keys()].map((stepSize) => [
-    swapRowBy(blankIdx, stepSize * direction),
-    swapRowBy(blankIdx, stepSize * direction + 1 * direction),
-  ]);
 };
 
 export const applyAllSwaps = (board: Board, swaps: [Idx, Idx][]): Board =>
@@ -97,28 +78,27 @@ export const applyOneSwap = (board: Board, [from, to]: Swap): Board => {
   return draft as Board;
 };
 
-const swapColBy = (original: Idx, count: number): Idx => {
-  const candidate = original + count;
-  return sameRow(original, candidate) ? candidate : original;
+const isHorizontalNeighbor = (
+  target: Idx,
+  candidate: number
+): candidate is Idx => {
+  const distance = Math.abs(target - candidate);
+  return (
+    isIdx(candidate) &&
+    getRowIdx(target) === getRowIdx(candidate) &&
+    distance === 1
+  );
 };
 
-const swapRowBy = (original: Idx, count: number): Idx => {
-  const candidate = original + count * gridCount;
-  return sameCol(original, candidate) ? candidate : original;
-};
-
-const sameRow = (target: Idx, candidate: number): candidate is Idx => {
+const isVerticalNeighbor = (
+  target: Idx,
+  candidate: number
+): candidate is Idx => {
   if (!isIdx(candidate)) {
     return false;
   }
-  return getRowIdx(target) === getRowIdx(candidate);
-};
-
-const sameCol = (target: Idx, candidate: number): candidate is Idx => {
-  if (!isIdx(candidate)) {
-    return false;
-  }
-  return getColIdx(target) === getColIdx(candidate);
+  const distance = Math.abs(getRowIdx(target) - getRowIdx(candidate));
+  return getColIdx(target) === getColIdx(candidate) && distance === 1;
 };
 
 // unsafe
@@ -164,8 +144,12 @@ export const randomSwaps = (board: Board): Swap[] => {
 export const getSwappables = (board: Board): Swappables => {
   const blankIdx = getBlankIdx(board);
   return [
-    ...getRow(getRowIdx(blankIdx)),
-    ...getCol(getColIdx(blankIdx)),
+    ...getRow(getRowIdx(blankIdx)).filter((candidate) =>
+      isHorizontalNeighbor(blankIdx, candidate)
+    ),
+    ...getCol(getColIdx(blankIdx)).filter((candidate) =>
+      isVerticalNeighbor(blankIdx, candidate)
+    ),
   ].filter((idx) => idx !== blankIdx) as Swappables;
 };
 
