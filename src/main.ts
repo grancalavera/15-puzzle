@@ -7,7 +7,6 @@ import * as p from "pixi.js";
 import { Application } from "pixi.js";
 import { assertNever } from "./assertNever";
 import { Box } from "./components/Box";
-import { Button } from "./components/Button";
 import {
   BlankTile,
   SwappableTile,
@@ -15,13 +14,17 @@ import {
   SwapSpeed,
   Tile,
 } from "./components/Tile";
+import { ToolbarButton } from "./components/ToolbarButton";
+import { loadFonts } from "./loadFonts";
 import { Idx, isBlank, Swap } from "./model";
 import {
   buttonWidth,
   cellSize,
+  color,
   gameHeight,
   gameWidth,
   gap,
+  gridSize,
   padding,
 } from "./settings";
 import {
@@ -39,6 +42,8 @@ gsap.registerPlugin(PixiPlugin);
 PixiPlugin.registerPIXI(p);
 
 async function main() {
+  await loadFonts();
+
   const app = new Application();
 
   initDevtools({ app });
@@ -46,43 +51,19 @@ async function main() {
   await app.init({
     width: gameWidth,
     height: gameHeight,
-    backgroundColor: "bisque",
+    backgroundColor: color.black,
+    antialias: true,
   });
 
   document.querySelector<HTMLDivElement>("#app")!.appendChild(app.canvas);
 
-  const background = new Box({
-    bgColor: "gray",
-    width: gameWidth,
-    height: gameHeight,
-  });
-
-  const gameContent = new p.Container();
-  gameContent.position.set(padding, padding);
-
-  const shuffleButton = new Button({
-    style: {
-      disabledColor: 0xdddddd,
-      overColor: 0xfefab7,
-      downColor: 0xdcd8a4,
-      upColor: "white",
-    },
-    width: buttonWidth,
-    height: cellSize,
+  const shuffleButton = new ToolbarButton({
     text: "Shuffle",
     onClick: beginShuffle,
   });
   shuffleButton.root.position.set(padding, gameHeight - padding - cellSize);
 
-  const solveButton = new Button({
-    style: {
-      disabledColor: 0xdddddd,
-      overColor: 0xfefab7,
-      downColor: 0xdcd8a4,
-      upColor: "white",
-    },
-    width: buttonWidth,
-    height: cellSize,
+  const solveButton = new ToolbarButton({
     text: "Solve",
     onClick: beginSolve,
   });
@@ -192,7 +173,23 @@ async function main() {
     }
   });
 
-  app.stage.addChild(background.root);
+  const gameBackground = new Box({
+    bgColor: color.gray1,
+    width: gameWidth,
+    height: gameHeight,
+  });
+
+  const gameContent = new p.Container();
+  const gameContentBackground = new Box({
+    bgColor: color.gray3,
+    width: gridSize,
+    height: gridSize,
+  });
+
+  gameContent.position.set(padding, padding);
+  gameContent.addChild(gameContentBackground.root);
+
+  app.stage.addChild(gameBackground.root);
   app.stage.addChild(shuffleButton.root);
   app.stage.addChild(solveButton.root);
   app.stage.addChild(gameContent);

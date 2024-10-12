@@ -8,6 +8,7 @@ export type BoxOptions = {
   bgColor: ColorSource;
   width: number;
   height: number;
+  borderRadius?: number;
 };
 
 export class Box implements WithContainerChild {
@@ -15,6 +16,7 @@ export class Box implements WithContainerChild {
   #bg: Graphics;
   #width: number;
   #height: number;
+  #borderRadius?: number;
 
   get root() {
     return this.#root;
@@ -23,6 +25,7 @@ export class Box implements WithContainerChild {
   constructor(options: BoxOptions) {
     this.#width = options.width;
     this.#height = options.height;
+    this.#borderRadius = options.borderRadius;
     this.#bg = this.#createBg(options.bgColor);
     this.#root = new Container();
     this.#root.addChild(this.#bg);
@@ -36,6 +39,10 @@ export class Box implements WithContainerChild {
   }
 
   #createBg(color?: ColorSource) {
-    return new Graphics().rect(0, 0, this.#width, this.#height).fill({ color });
+    return typeof this.#borderRadius === "number"
+      ? new Graphics()
+          .roundRect(0, 0, this.#width, this.#height, this.#borderRadius)
+          .fill({ color })
+      : new Graphics().rect(0, 0, this.#width, this.#height).fill({ color });
   }
 }

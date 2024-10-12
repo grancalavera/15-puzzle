@@ -1,8 +1,9 @@
 import { ColorSource, Container, ContainerChild } from "pixi.js";
 import { Label, LabelOptions } from "./Label";
+import { borderRadius } from "../settings";
 
-type ButtonOptions = Omit<LabelOptions, "bgColor"> & {
-  style: ButtonStyle;
+export type ButtonOptions = Omit<LabelOptions, "bgColor"> & {
+  buttonStyle: ButtonStyle;
   onClick?: () => void;
   disabled?: boolean;
   x?: number;
@@ -26,7 +27,7 @@ export class Button {
   set disabled(value: boolean) {
     this.#root.interactive = !value;
     this.#label.setBgColor(
-      value ? this.#style.disabledColor : this.#style.upColor
+      value ? this.#buttonStyle.disabledColor : this.#buttonStyle.upColor
     );
   }
 
@@ -35,18 +36,18 @@ export class Button {
   }
 
   #root: ContainerChild;
-  #style: ButtonStyle;
+  #buttonStyle: ButtonStyle;
   #label: Label;
 
-  #handleOver = () => this.#label.setBgColor(this.#style.overColor);
-  #handleOut = () => this.#label.setBgColor(this.#style.upColor);
-  #handleDown = () => this.#label.setBgColor(this.#style.downColor);
-  #handleUp = () => this.#label.setBgColor(this.#style.overColor);
+  #handleOver = () => this.#label.setBgColor(this.#buttonStyle.overColor);
+  #handleOut = () => this.#label.setBgColor(this.#buttonStyle.upColor);
+  #handleDown = () => this.#label.setBgColor(this.#buttonStyle.downColor);
+  #handleUp = () => this.#label.setBgColor(this.#buttonStyle.overColor);
   #handleClick = () => this.onClick();
 
   constructor(options: ButtonOptions) {
-    const { style, onClick, disabled, x, y, ...labelOptions } = options;
-    this.#style = style;
+    const { buttonStyle, onClick, disabled, x, y, ...labelOptions } = options;
+    this.#buttonStyle = buttonStyle;
     this.onClick = onClick ?? this.onClick;
 
     this.#root = new Container();
@@ -56,7 +57,11 @@ export class Button {
     this.#root.addEventListener("mousedown", this.#handleDown);
     this.#root.addEventListener("mouseup", this.#handleUp);
     this.#root.addEventListener("pointerdown", this.#handleClick);
-    this.#label = new Label({ ...labelOptions, bgColor: style.upColor });
+    this.#label = new Label({
+      ...labelOptions,
+      bgColor: buttonStyle.upColor,
+      borderRadius,
+    });
     this.#root.addChild(this.#label.root);
 
     // here because it depends on the container and the label
