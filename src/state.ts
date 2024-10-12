@@ -78,12 +78,12 @@ const swapping = (board: Board, idx: Idx, history: Swap[]): GameState => {
 };
 
 const shuffling = (board: Board): GameState => {
-  const [shuffledBoard, shuffles] = shuffleBoard(board, shuffleCount);
+  const shuffle = shuffleBoard(board, shuffleCount);
   return {
     kind: "Shuffling",
-    board: shuffledBoard,
-    shuffles,
-    history: [...shuffles],
+    board: shuffle.board,
+    shuffles: shuffle.shuffles,
+    history: [...shuffle.shuffles],
   };
 };
 

@@ -166,6 +166,7 @@ const swapTile = async (
   speed: SwapSpeed
 ): Promise<Idx> => {
   if (tile.idx === idx) return tile.idx;
+
   await gsap
     .to(tile.root, {
       pixi: getCellPosByIdx(idx),

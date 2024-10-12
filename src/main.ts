@@ -149,7 +149,6 @@ async function main() {
 
   state$.subscribe(async (state) => {
     shuffleButton.disabled = true;
-    solveButton.disabled = true;
 
     switch (state.kind) {
       case "NotSolved": {
@@ -161,6 +160,7 @@ async function main() {
       case "Solved": {
         disableAllTiles(true);
         shuffleButton.disabled = false;
+        solveButton.disabled = true;
         return;
       }
       case "Swapping": {
@@ -172,6 +172,7 @@ async function main() {
       }
       case "Shuffling": {
         const { shuffles } = state;
+        solveButton.disabled = true;
         disableAllTiles();
         await swapTiles(shuffles, "fast");
         endShuffle();
@@ -179,6 +180,7 @@ async function main() {
       }
       case "Solving": {
         const { solution } = state;
+        solveButton.disabled = true;
         disableAllTiles();
         await swapTiles(solution, "fast");
         endSolve();
