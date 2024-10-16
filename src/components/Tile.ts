@@ -2,7 +2,7 @@ import { gsap } from "gsap";
 import { Container, ContainerChild } from "pixi.js";
 import { Cell, getColIdx, getRowIdx, Idx } from "../model";
 import { cellSize, color, gap, largerText, swapSpeed } from "../settings";
-import { Box, WithContainerChild } from "./Box";
+import { Box, WithRoot } from "./Box";
 import { Button } from "./Button";
 
 export type SwapSpeed = "slow" | "fast";
@@ -14,7 +14,7 @@ export type SwappableTileOptions = {
   cell: Cell;
 };
 
-export type SwappableTile = WithContainerChild & {
+export type SwappableTile = WithRoot & {
   readonly idx: Idx;
   readonly cell: Cell;
   disabled: boolean;

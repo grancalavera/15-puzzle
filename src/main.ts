@@ -7,6 +7,7 @@ import * as p from "pixi.js";
 import { Application } from "pixi.js";
 import { assertNever } from "./assertNever";
 import { Box } from "./components/Box";
+import { Switch } from "./components/Switch";
 import {
   BlankTile,
   SwappableTile,
@@ -14,16 +15,14 @@ import {
   SwapSpeed,
   Tile,
 } from "./components/Tile";
-import { ToolbarButton } from "./components/ToolbarButton";
 import { loadFonts } from "./loadFonts";
 import { Idx, isBlank, Swap } from "./model";
 import {
-  buttonWidth,
   cellSize,
   color,
+  contentWidth,
   gameHeight,
   gameWidth,
-  gap,
   gridSize,
   padding,
 } from "./settings";
@@ -57,21 +56,21 @@ async function main() {
 
   document.querySelector<HTMLDivElement>("#app")!.appendChild(app.canvas);
 
-  const shuffleButton = new ToolbarButton({
+  const shuffleSolve = new Switch({
+    width: contentWidth,
+    height: cellSize,
     text: "Shuffle",
-    onClick: beginShuffle,
+    onChange: (value) => {
+      if (value) {
+        shuffleSolve.setText("Solve");
+        beginShuffle();
+      } else {
+        shuffleSolve.setText("Shuffle");
+        beginSolve();
+      }
+    },
   });
-  shuffleButton.root.position.set(padding, gameHeight - padding - cellSize);
-
-  const solveButton = new ToolbarButton({
-    text: "Solve",
-    onClick: beginSolve,
-  });
-
-  solveButton.root.position.set(
-    padding + gap + buttonWidth,
-    gameHeight - padding - cellSize
-  );
+  shuffleSolve.root.position.set(padding, gameHeight - padding - cellSize);
 
   const tiles: SwappableTile[] = initialState.board.map((cell, i) => {
     const idx = i as Idx;
@@ -94,10 +93,6 @@ async function main() {
 
     return tile;
   });
-
-  const isSolved = initialState.kind === "Solved";
-  solveButton.disabled = isSolved;
-  shuffleButton.disabled = !isSolved;
 
   const swapTiles = async (swaps: Swap[], speed: SwapSpeed): Promise<void> => {
     const [next, ...rest] = swaps;
@@ -129,19 +124,16 @@ async function main() {
   };
 
   state$.subscribe(async (state) => {
-    shuffleButton.disabled = true;
+    shuffleSolve.disabled = false;
 
     switch (state.kind) {
       case "NotSolved": {
         const { swappables } = state;
         enableSwappableTiles(swappables);
-        solveButton.disabled = false;
         return;
       }
       case "Solved": {
         disableAllTiles(true);
-        shuffleButton.disabled = false;
-        solveButton.disabled = true;
         return;
       }
       case "Swapping": {
@@ -153,7 +145,7 @@ async function main() {
       }
       case "Shuffling": {
         const { shuffles } = state;
-        solveButton.disabled = true;
+        shuffleSolve.disabled = true;
         disableAllTiles();
         await swapTiles(shuffles, "fast");
         endShuffle();
@@ -161,7 +153,7 @@ async function main() {
       }
       case "Solving": {
         const { solution } = state;
-        solveButton.disabled = true;
+        shuffleSolve.disabled = true;
         disableAllTiles();
         await swapTiles(solution, "fast");
         endSolve();
@@ -190,8 +182,7 @@ async function main() {
   gameContent.addChild(gameContentBackground.root);
 
   app.stage.addChild(gameBackground.root);
-  app.stage.addChild(shuffleButton.root);
-  app.stage.addChild(solveButton.root);
+  app.stage.addChild(shuffleSolve.root);
   app.stage.addChild(gameContent);
   tiles.forEach((tile) => gameContent.addChild(tile.root));
 }
