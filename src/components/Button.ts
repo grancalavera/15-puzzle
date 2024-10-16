@@ -35,6 +35,10 @@ export class Button {
     return this.#root;
   }
 
+  setText(text: string) {
+    this.#label.setText(text);
+  }
+
   #root: ContainerChild;
   #buttonStyle: ButtonStyle;
   #label: Label;

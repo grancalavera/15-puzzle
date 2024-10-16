@@ -1,6 +1,6 @@
 import { ColorSource, Container, ContainerChild, Graphics } from "pixi.js";
 
-export type WithContainerChild = {
+export type WithRoot = {
   root: ContainerChild;
 };
 
@@ -11,7 +11,7 @@ export type BoxOptions = {
   borderRadius?: number;
 };
 
-export class Box implements WithContainerChild {
+export class Box implements WithRoot {
   #root: ContainerChild;
   #bg: Graphics;
   #width: number;
