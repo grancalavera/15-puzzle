@@ -134,6 +134,8 @@ async function main() {
       }
       case "Solved": {
         disableAllTiles(true);
+        shuffleSolve.setChecked(false);
+        shuffleSolve.setText("Shuffle");
         return;
       }
       case "Swapping": {
