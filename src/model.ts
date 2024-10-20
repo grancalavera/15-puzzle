@@ -58,7 +58,7 @@ const isSorted = (arr: number[]): boolean => {
   return true;
 };
 
-export const getSwaps = (board: Board, cellIdx: Idx): Swap[] => {
+export const getSwaps = (board: Board, cellIdx: Idx): [Swap] | [] => {
   const blankIdx = getBlankIdx(board);
   const h = isHorizontalNeighbor(cellIdx);
   const v = isVerticalNeighbor(cellIdx);
@@ -151,6 +151,23 @@ export const getRandomSwaps = (board: Board): Swap[] => {
   return getSwaps(board, idx);
 };
 
+/**
+ * Checks if the next Swap to apply is the same as the last applied Swap
+ * but in reverse order, and if it is, it skips it.
+ * @param shuffles list of swaps to apply to a board
+ * @param candidate a Swap to check against the last Swap in the list
+ * @returns candidate is Swap
+ */
+const isValidSwap = (shuffles: Swap[], candidate: Swap): candidate is Swap => {
+  const lastShuffle = shuffles[shuffles.length - 1];
+  if (!lastShuffle) return true;
+
+  const [a1, a2] = lastShuffle;
+  const [b2, b1] = candidate;
+
+  return a1 !== b1 || a2 !== b2;
+};
+
 export const shuffleBoard = (board: Board, count: number): Shuffle => {
   const shuffles: Swap[] = [];
 
@@ -158,9 +175,14 @@ export const shuffleBoard = (board: Board, count: number): Shuffle => {
   let shuffledBoard = board;
 
   while (remaining > 0) {
-    const swaps = getRandomSwaps(shuffledBoard);
-    shuffles.push(...swaps);
-    shuffledBoard = applyAllSwaps(shuffledBoard, swaps);
+    const [nextSwap] = getRandomSwaps(shuffledBoard);
+
+    if (!nextSwap || !isValidSwap(shuffles, nextSwap)) {
+      continue;
+    }
+
+    shuffles.push(nextSwap);
+    shuffledBoard = applyOneSwap(shuffledBoard, nextSwap);
     remaining--;
   }
 

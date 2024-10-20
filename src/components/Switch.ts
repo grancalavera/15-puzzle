@@ -33,13 +33,14 @@ export class Switch implements WithRoot {
     return this.#disabled;
   }
 
-  setChecked(value: boolean) {
+  setChecked(value: boolean, onComplete?: () => void) {
     this.#value = value;
     const xTo = this.#value ? this.#buttonWidth : 0;
     gsap.to(this.#button.root, {
       pixi: { x: xTo },
       duration: 0.25,
       ease: "power3.inOut",
+      onComplete,
     });
   }
 
@@ -61,8 +62,9 @@ export class Switch implements WithRoot {
     this.#button = new Button({
       text: options.text,
       onClick: () => {
-        this.setChecked(!this.#value);
-        options.onChange(this.#value);
+        this.setChecked(!this.#value, () => {
+          options.onChange(this.#value);
+        });
       },
       textStyle: smallerText,
       buttonStyle: {
