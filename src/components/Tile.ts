@@ -106,7 +106,7 @@ export class Tile implements SwappableTile {
       this.#root.addChild(this.#solvedTile.root);
       gsap.to(this.#solvedTile.root, {
         alpha: 1,
-        duration: Math.random() * 0.5 + 0.2,
+        duration: Math.random() * 0.3 + 0.07,
         ease: "power3.inOut",
       });
     } else {
