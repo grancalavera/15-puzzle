@@ -40,3 +40,10 @@ export const largerText: TextStyleOptions = {
   fontSize: 30,
   fill: color.black,
 };
+
+export const solvedTileText: TextStyleOptions = {
+  fontFamily: "Inter",
+  fontWeight: "bold",
+  fontSize: 30,
+  fill: color.darkPink,
+};

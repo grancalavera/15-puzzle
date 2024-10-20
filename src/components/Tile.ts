@@ -1,9 +1,18 @@
 import { gsap } from "gsap";
 import { Container, ContainerChild } from "pixi.js";
 import { Cell, getColIdx, getRowIdx, Idx } from "../model";
-import { cellSize, color, gap, largerText, swapSpeed } from "../settings";
+import {
+  borderRadius,
+  cellSize,
+  color,
+  gap,
+  largerText,
+  solvedTileText,
+  swapSpeed,
+} from "../settings";
 import { Box, WithRoot } from "./Box";
 import { Button } from "./Button";
+import { Label } from "./Label";
 
 export type SwapSpeed = "slow" | "fast";
 
@@ -92,13 +101,24 @@ export class Tile implements SwappableTile {
 
   set solved(value: boolean) {
     this.#solved = value;
+    if (value) {
+      this.#solvedTile.root.alpha = 0;
+      this.#root.addChild(this.#solvedTile.root);
+      gsap.to(this.#solvedTile.root, {
+        alpha: 1,
+        duration: Math.random() * 0.5 + 0.2,
+        ease: "power3.inOut",
+      });
+    } else {
+      this.#root.removeChild(this.#solvedTile.root);
+    }
   }
 
   #solved: boolean = false;
-
   #root: ContainerChild;
   #idx: Idx;
   #button: Button;
+  #solvedTile: Label;
 
   readonly cell: Cell;
 
@@ -109,9 +129,10 @@ export class Tile implements SwappableTile {
     this.#root.position.set(x, y);
     this.#root.zIndex = 1;
     this.cell = cell;
+    const text = (cell + 1).toString();
 
     this.#button = new Button({
-      text: (cell + 1).toString(),
+      text,
       disabled,
       buttonStyle: {
         disabledColor: color.white,
@@ -123,6 +144,15 @@ export class Tile implements SwappableTile {
       height: cellSize,
       width: cellSize,
       onClick: () => onSwap(this.#idx),
+    });
+
+    this.#solvedTile = new Label({
+      text,
+      bgColor: color.pink,
+      height: cellSize,
+      width: cellSize,
+      borderRadius: borderRadius,
+      textStyle: solvedTileText,
     });
 
     this.#root.addChild(this.#button.root);
