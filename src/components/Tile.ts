@@ -1,11 +1,11 @@
 import { gsap } from "gsap";
 import { Container, ContainerChild } from "pixi.js";
-import { Cell, getColIdx, getRowIdx, Idx } from "../model";
+import { Cell, Idx } from "../model";
 import {
   borderRadius,
   cellSize,
   color,
-  gap,
+  getCellPosByIdx,
   largerText,
   solvedTileText,
   swapSpeed,
@@ -171,11 +171,6 @@ export class Tile implements SwappableTile {
     return this.#button.disabled;
   }
 }
-
-const getCellPosByIdx = (idx: Idx) => ({
-  x: getColIdx(idx) * (cellSize + gap),
-  y: getRowIdx(idx) * (cellSize + gap),
-});
 
 const swapTile = async (
   tile: SwappableTile,

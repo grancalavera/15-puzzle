@@ -11,3 +11,8 @@ body {
   height: 100vh;
   background-color: #3b3b3b;
 }
+
+.tile:hover {
+  fill: #9cfe6b;
+  cursor: pointer;
+}

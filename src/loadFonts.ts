@@ -36,5 +36,6 @@ export async function loadFonts() {
       return fontFace;
     })
   );
+
   fontFaces.forEach((fontFace) => document.fonts.add(fontFace));
 }

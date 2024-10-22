@@ -1,5 +1,5 @@
 import { TextStyleOptions } from "pixi.js";
-import { gridCount } from "./model";
+import { getColIdx, getRowIdx, gridCount, Idx } from "./model";
 
 export const gap = 1;
 export const padding = 8;
@@ -47,3 +47,8 @@ export const solvedTileText: TextStyleOptions = {
   fontSize: 30,
   fill: color.darkPink,
 };
+
+export const getCellPosByIdx = (idx: Idx) => ({
+  x: getColIdx(idx) * (cellSize + gap),
+  y: getRowIdx(idx) * (cellSize + gap),
+});
