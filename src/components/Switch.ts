@@ -1,6 +1,6 @@
 import { gsap } from "gsap";
 import { Container, ContainerChild } from "pixi.js";
-import { borderRadius, cellSize, color, smallerText } from "../settings";
+import { borderRadius, cellSize, color, counterText } from "../settings";
 import { Box, WithRoot } from "./Box";
 import { Button } from "./Button";
 
@@ -66,7 +66,7 @@ export class Switch implements WithRoot {
           options.onChange(this.#value);
         });
       },
-      textStyle: smallerText,
+      textStyle: counterText,
       buttonStyle: {
         disabledColor: color.green1,
         overColor: color.green1,

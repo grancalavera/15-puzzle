@@ -6,7 +6,7 @@ import {
   applyAllSwaps,
   Board,
   getSwappables,
-  getSwaps,
+  getSwap,
   Idx,
   isSolved,
   shuffleBoard,
@@ -22,6 +22,7 @@ type NotSolved = {
   board: Board;
   swappables: Swappables;
   history: Swap[];
+  moves: number;
 };
 
 type Swapping = {
@@ -41,6 +42,7 @@ type Shuffling = {
 type Solved = {
   kind: "Solved";
   board: Board;
+  moves: number;
 };
 
 type Solving = {
@@ -50,15 +52,29 @@ type Solving = {
   solution: Swap[];
 };
 
-const notSolved = (board: Board, history: Swap[]): GameState => ({
+const notSolved = (board: Board, history: Swap[] = []): GameState => ({
   kind: "NotSolved",
   board,
   swappables: getSwappables(board),
   history,
+  moves: 0,
 });
+
+const f = (state: GameState): GameState => {
+  const history = historyFromState(state);
+  const { board } = state;
+  return {
+    kind: "NotSolved",
+    board,
+    swappables: getSwappables(board),
+    history,
+    moves: 0,
+  };
+};
 
 const solved: GameState = {
   kind: "Solved",
+  moves: 0,
   board: [
     ...[0, 1, 2, 3],
     ...[4, 5, 6, 7],
@@ -66,32 +82,6 @@ const solved: GameState = {
     ...[12, 13, 14, _],
   ] as Board,
 };
-
-const swapping = (board: Board, idx: Idx, history: Swap[]): GameState => {
-  const swaps = getSwaps(board, idx);
-  return {
-    kind: "Swapping",
-    board: applyAllSwaps(board, swaps),
-    swaps: swaps,
-    history: [...history, ...swaps],
-  };
-};
-
-const shuffling = (board: Board): GameState => {
-  const shuffle = shuffleBoard(board, shuffleCount);
-  return {
-    kind: "Shuffling",
-    board: shuffle.board,
-    shuffles: shuffle.shuffles,
-    history: [...shuffle.shuffles],
-  };
-};
-
-const solving = (history: Swap[]): GameState => ({
-  kind: "Solving",
-  board: solved.board,
-  solution: [...history].reverse(),
-});
 
 const beginSwap$ = new Subject<Idx>();
 const endSwap$ = new Subject<void>();
@@ -107,13 +97,10 @@ export const endShuffle = endShuffle$.next.bind(endShuffle$);
 export const beginSolve = beginSolve$.next.bind(beginSolve$);
 export const endSolve = endSolve$.next.bind(endSolve$);
 
-const stateFromBoard = (board: Board, history: Swap[] = []): GameState =>
-  isSolved(board) ? solved : notSolved(board, history);
-
 const historyFromState = (state: GameState): Swap[] =>
   state.kind === "Solved" || state.kind === "Solving" ? [] : state.history;
 
-export const initialState = stateFromBoard([
+export const initialState = notSolved([
   ...[0, 1, 2, 3],
   ...[4, 5, 6, 7],
   ...[8, 9, 10, 11],
@@ -131,27 +118,54 @@ const action$ = mergeWithKey({
 
 export const state$ = action$.pipe(
   scan((state, action) => {
-    const history = historyFromState(state);
-
     switch (action.type) {
       case "beginSwap$": {
-        return swapping(state.board, action.payload, history);
+        const swap = getSwap(state.board, action.payload);
+        const board = applyAllSwaps(state.board, swap);
+        const s: GameState = {
+          kind: "Swapping",
+          board,
+          swaps: swap,
+          history: [...historyFromState(state), ...swap],
+        };
+        return s;
       }
 
       case "beginShuffle$": {
-        return shuffling(state.board);
+        const { board, shuffles } = shuffleBoard(state.board, shuffleCount);
+        const s: GameState = {
+          kind: "Shuffling",
+          board: board,
+          // either one of these two needs to be made into another reference
+          shuffles: shuffles,
+          history: [...shuffles],
+        };
+        return s;
       }
 
       case "endSwap$": {
-        return stateFromBoard(state.board, history);
+        return isSolved(state.board)
+          ? solved
+          : notSolved(state.board, historyFromState(state));
       }
 
       case "endShuffle$": {
-        return stateFromBoard(state.board, history);
+        // this is an anomaly: at the end of a shuffle the game should
+        // never be solved but it can happen by chance. ideally if shuffling
+        // ends in a solved state, the board should be shuffled again but I
+        // don't know where to trigger that subsequent shuffle from.
+        return isSolved(state.board)
+          ? solved
+          : notSolved(state.board, historyFromState(state));
       }
 
       case "beginSolve$": {
-        return solving(history);
+        const s: GameState = {
+          kind: "Solving",
+          board: state.board,
+          solution: [...historyFromState(state)].reverse(),
+        };
+        return s;
       }
 
       case "endSolve$": {

@@ -21,10 +21,12 @@ import {
   cellSize,
   color,
   contentWidth,
-  gameHeight,
-  gameWidth,
+  appHeight,
+  appWidth,
   gridSize,
   padding,
+  counterHeight,
+  counterText,
 } from "./settings";
 import {
   beginShuffle,
@@ -33,9 +35,11 @@ import {
   endShuffle,
   endSolve,
   endSwap,
+  GameState,
   initialState,
   state$,
 } from "./state";
+import { Label } from "./components/Label";
 
 gsap.registerPlugin(PixiPlugin);
 PixiPlugin.registerPIXI(p);
@@ -48,8 +52,8 @@ async function main() {
   initDevtools({ app });
 
   await app.init({
-    width: gameWidth,
-    height: gameHeight,
+    width: appWidth,
+    height: appHeight,
     backgroundColor: color.black,
     antialias: true,
   });
@@ -70,7 +74,15 @@ async function main() {
       }
     },
   });
-  shuffleSolve.root.position.set(padding, gameHeight - padding - cellSize);
+  shuffleSolve.root.position.set(padding, appWidth);
+
+  const counter = new Label({
+    bgColor: color.gray1,
+    width: contentWidth,
+    height: counterHeight,
+    text: "",
+    textStyle: counterText,
+  });
 
   const tiles: SwappableTile[] = initialState.board.map((cell, i) => {
     const idx = i as Idx;
@@ -123,12 +135,19 @@ async function main() {
     });
   };
 
+  const updateCounter = (state: GameState) => {
+    const count =
+      state.kind === "NotSolved" ? state.history.length.toString() : "";
+    counter.setText(count.toString());
+  };
+
   state$.subscribe(async (state) => {
     shuffleSolve.disabled = false;
 
     switch (state.kind) {
       case "NotSolved": {
         const { swappables } = state;
+        updateCounter(state);
         enableSwappableTiles(swappables);
         return;
       }
@@ -169,8 +188,8 @@ async function main() {
 
   const gameBackground = new Box({
     bgColor: color.gray1,
-    width: gameWidth,
-    height: gameHeight,
+    width: appWidth,
+    height: appHeight,
   });
 
   const gameContent = new p.Container();
@@ -187,6 +206,9 @@ async function main() {
   app.stage.addChild(shuffleSolve.root);
   app.stage.addChild(gameContent);
   tiles.forEach((tile) => gameContent.addChild(tile.root));
+
+  counter.root.position.set(padding, appHeight - counterHeight - padding);
+  app.stage.addChild(counter.root);
 }
 
 main();
