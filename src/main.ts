@@ -7,6 +7,7 @@ import * as p from "pixi.js";
 import { Application } from "pixi.js";
 import { assertNever } from "./assertNever";
 import { Box } from "./components/Box";
+import { Label } from "./components/Label";
 import { Switch } from "./components/Switch";
 import {
   BlankTile,
@@ -18,15 +19,15 @@ import {
 import { loadFonts } from "./loadFonts";
 import { Idx, isBlank, Swap } from "./model";
 import {
+  appHeight,
+  appWidth,
   cellSize,
   color,
   contentWidth,
-  appHeight,
-  appWidth,
-  gridSize,
-  padding,
   counterHeight,
   counterText,
+  gridSize,
+  padding,
 } from "./settings";
 import {
   beginShuffle,
@@ -35,11 +36,9 @@ import {
   endShuffle,
   endSolve,
   endSwap,
-  GameState,
-  initialState,
   state$,
 } from "./state";
-import { Label } from "./components/Label";
+import { getMoveCount, initialState } from "./state.model";
 
 gsap.registerPlugin(PixiPlugin);
 PixiPlugin.registerPIXI(p);
@@ -135,20 +134,16 @@ async function main() {
     });
   };
 
-  const updateCounter = (state: GameState) => {
-    const count =
-      state.kind === "NotSolved" ? state.history.length.toString() : "";
-    counter.setText(count.toString());
-  };
-
   state$.subscribe(async (state) => {
     shuffleSolve.disabled = false;
+    const moveCount = getMoveCount(state);
+    counter.setText(
+      moveCount > 0 ? `${moveCount} move${moveCount === 1 ? "" : "s"}` : ""
+    );
 
     switch (state.kind) {
       case "NotSolved": {
-        const { swappables } = state;
-        updateCounter(state);
-        enableSwappableTiles(swappables);
+        enableSwappableTiles(state.swappables);
         return;
       }
       case "Solved": {
@@ -158,25 +153,22 @@ async function main() {
         return;
       }
       case "Swapping": {
-        const { swaps } = state;
         disableAllTiles();
-        await swapTiles(swaps, "slow");
+        await swapTiles(state.swaps, "slow");
         endSwap();
         return;
       }
       case "Shuffling": {
-        const { shuffles } = state;
         shuffleSolve.disabled = true;
         disableAllTiles();
-        await swapTiles(shuffles, "fast");
+        await swapTiles(state.shuffles, "fast");
         endShuffle();
         return;
       }
       case "Solving": {
-        const { solution } = state;
         shuffleSolve.disabled = true;
         disableAllTiles();
-        await swapTiles(solution, "fast");
+        await swapTiles(state.solution, "fast");
         endSolve();
         return;
       }

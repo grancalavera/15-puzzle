@@ -31,10 +31,19 @@ export const color = {
 
 export const counterText: TextStyleOptions = {
   fontFamily: "Inter",
+  fontStyle: "italic",
+  fontWeight: "bold",
+  fontSize: 16,
+  fill: color.gray3,
+};
+
+export const switchText: TextStyleOptions = {
+  fontFamily: "Inter",
   fontWeight: "bold",
   fontSize: 20,
   fill: color.gray3,
 };
+
 export const smallerText: TextStyleOptions = {
   fontFamily: "Inter",
   fontWeight: "bold",

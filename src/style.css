@@ -2,6 +2,7 @@ body {
   margin: 0;
   width: 100vw;
   height: 100vh;
+  padding: 0;
 }
 
 #app {
@@ -10,4 +11,14 @@ body {
   width: 100vw;
   height: 100vh;
   background-color: #3b3b3b;
+}
+
+#debug {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: white;
+  background-color: black;
+  padding: 1em;
+  font-size: 10px;
 }
