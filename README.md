@@ -4,34 +4,24 @@
 
 ```mermaid
 stateDiagram
-    a: Solved (a)
-    b: Shuffling (b)
-    c: Not Solved (c)
-    d: Swapping (d)
 
-    state c1 <<choice>>
-    state c2 <<choice>>
-    state c3 <<choice>>
+a: Solved (a)
+b: Not Solved (b)
+c: Swapping (c)
+d: Shuffling (d)
+e: Solving (e)
 
-    [*] --> a
+state c1 <<choice>>
 
-    a --> b: requestShuffle
-    b --> c1: shuffle
-    c1 --> b: hasShuffles
-    c1 --> c: noShuffles
+a --> d: beginShuffle
+d --> b: endShuffle
 
-    c --> b: requestShuffle
-    c --> d: requestSwap
-    d --> c2: swap
-    c2 --> d: hasSwaps
-    c2 --> c3: noSwaps
-    c3 --> c: notSolved
-    c3 --> a: solved
+b --> c: beginSwap
+c --> c1: endSwap
 
-    e: Solving (e)
-    state c4 <<choice>>
-    c --> e: requestSolve
-    e --> c4: popHistory
-    c4 --> e: hasHistory
-    c4 --> a: solved
+c1 --> b: not solved
+c1 --> a: solved
+
+b --> e: beginSolve
+e --> a: endSolve
 ```

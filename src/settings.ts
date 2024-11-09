@@ -3,11 +3,13 @@ import { gridCount } from "./model";
 
 export const gap = 1;
 export const padding = 8;
-export const cellSize = 65;
+export const cellSize = 66;
+export const counterHeight = cellSize / 3;
 export const contentWidth = cellSize * gridCount + gap * (gridCount - 1);
 export const buttonWidth = contentWidth / 2 - gap / 2;
-export const gameWidth = contentWidth + padding * 2;
-export const gameHeight = gameWidth + padding + cellSize;
+export const appWidth = contentWidth + padding * 2;
+export const appHeight =
+  appWidth + padding + cellSize + padding + counterHeight;
 export const swapSpeed = { slow: 0.15, fast: 0.07 };
 export const shuffleCount = 100;
 export const gridSize = cellSize * gridCount + gap * 3;
@@ -25,6 +27,21 @@ export const color = {
   green1: "#9CFE6B",
   green2: "#588E3D",
   purple: "#450599",
+};
+
+export const counterText: TextStyleOptions = {
+  fontFamily: "Inter",
+  fontStyle: "italic",
+  fontWeight: "bold",
+  fontSize: 16,
+  fill: color.gray3,
+};
+
+export const switchText: TextStyleOptions = {
+  fontFamily: "Inter",
+  fontWeight: "bold",
+  fontSize: 20,
+  fill: color.gray3,
 };
 
 export const smallerText: TextStyleOptions = {

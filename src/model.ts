@@ -58,7 +58,7 @@ const isSorted = (arr: number[]): boolean => {
   return true;
 };
 
-export const getSwaps = (board: Board, cellIdx: Idx): [Swap] | [] => {
+export const getSwap = (board: Board, cellIdx: Idx): [Swap] | [] => {
   const blankIdx = getBlankIdx(board);
   const h = isHorizontalNeighbor(cellIdx);
   const v = isVerticalNeighbor(cellIdx);
@@ -148,7 +148,7 @@ export const getSwappables = (board: Board): Swappables => {
 export const getRandomSwaps = (board: Board): Swap[] => {
   const swappables = getSwappables(board);
   const idx = choose(swappables);
-  return getSwaps(board, idx);
+  return getSwap(board, idx);
 };
 
 /**

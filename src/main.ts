@@ -7,6 +7,7 @@ import * as p from "pixi.js";
 import { Application } from "pixi.js";
 import { assertNever } from "./assertNever";
 import { Box } from "./components/Box";
+import { Label } from "./components/Label";
 import { Switch } from "./components/Switch";
 import {
   BlankTile,
@@ -18,11 +19,13 @@ import {
 import { loadFonts } from "./loadFonts";
 import { Idx, isBlank, Swap } from "./model";
 import {
+  appHeight,
+  appWidth,
   cellSize,
   color,
   contentWidth,
-  gameHeight,
-  gameWidth,
+  counterHeight,
+  counterText,
   gridSize,
   padding,
 } from "./settings";
@@ -33,9 +36,9 @@ import {
   endShuffle,
   endSolve,
   endSwap,
-  initialState,
   state$,
 } from "./state";
+import { getMoveCount, initialState } from "./state.model";
 
 gsap.registerPlugin(PixiPlugin);
 PixiPlugin.registerPIXI(p);
@@ -48,8 +51,8 @@ async function main() {
   initDevtools({ app });
 
   await app.init({
-    width: gameWidth,
-    height: gameHeight,
+    width: appWidth,
+    height: appHeight,
     backgroundColor: color.black,
     antialias: true,
   });
@@ -70,7 +73,15 @@ async function main() {
       }
     },
   });
-  shuffleSolve.root.position.set(padding, gameHeight - padding - cellSize);
+  shuffleSolve.root.position.set(padding, appWidth);
+
+  const counter = new Label({
+    bgColor: color.gray1,
+    width: contentWidth,
+    height: counterHeight,
+    text: "",
+    textStyle: counterText,
+  });
 
   const tiles: SwappableTile[] = initialState.board.map((cell, i) => {
     const idx = i as Idx;
@@ -125,11 +136,14 @@ async function main() {
 
   state$.subscribe(async (state) => {
     shuffleSolve.disabled = false;
+    const moveCount = getMoveCount(state);
+    counter.setText(
+      moveCount > 0 ? `${moveCount} move${moveCount === 1 ? "" : "s"}` : ""
+    );
 
     switch (state.kind) {
       case "NotSolved": {
-        const { swappables } = state;
-        enableSwappableTiles(swappables);
+        enableSwappableTiles(state.swappables);
         return;
       }
       case "Solved": {
@@ -139,25 +153,22 @@ async function main() {
         return;
       }
       case "Swapping": {
-        const { swaps } = state;
         disableAllTiles();
-        await swapTiles(swaps, "slow");
+        await swapTiles(state.swaps, "slow");
         endSwap();
         return;
       }
       case "Shuffling": {
-        const { shuffles } = state;
         shuffleSolve.disabled = true;
         disableAllTiles();
-        await swapTiles(shuffles, "fast");
+        await swapTiles(state.shuffles, "fast");
         endShuffle();
         return;
       }
       case "Solving": {
-        const { solution } = state;
         shuffleSolve.disabled = true;
         disableAllTiles();
-        await swapTiles(solution, "fast");
+        await swapTiles(state.solution, "fast");
         endSolve();
         return;
       }
@@ -169,8 +180,8 @@ async function main() {
 
   const gameBackground = new Box({
     bgColor: color.gray1,
-    width: gameWidth,
-    height: gameHeight,
+    width: appWidth,
+    height: appHeight,
   });
 
   const gameContent = new p.Container();
@@ -187,6 +198,9 @@ async function main() {
   app.stage.addChild(shuffleSolve.root);
   app.stage.addChild(gameContent);
   tiles.forEach((tile) => gameContent.addChild(tile.root));
+
+  counter.root.position.set(padding, appHeight - counterHeight - padding);
+  app.stage.addChild(counter.root);
 }
 
 main();

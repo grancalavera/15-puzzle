@@ -6,7 +6,7 @@ import {
   Swap,
   getSwappables,
   Swappables,
-  getSwaps,
+  getSwap,
 } from "./model";
 
 describe("solving puzzles", () => {
@@ -31,7 +31,7 @@ describe("swapping cells", () => {
     ] as Board;
 
     it("calculate", () => {
-      const actual = getSwaps(board, 0);
+      const actual = getSwap(board, 0);
       expect(actual).toEqual([]);
     });
   });
@@ -55,7 +55,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = getSwaps(board, 11);
+        const actual = getSwap(board, 11);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -69,7 +69,7 @@ describe("swapping cells", () => {
       const expectedSwaps: Swap[] = [];
 
       it("calculate", () => {
-        const actual = getSwaps(board, 7);
+        const actual = getSwap(board, 7);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -90,7 +90,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = getSwaps(board, 14);
+        const actual = getSwap(board, 14);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -102,7 +102,7 @@ describe("swapping cells", () => {
 
     describe("more than one horizontal swap is not allowed", () => {
       const expectedSwaps: Swap[] = [];
-      const actualSwaps = getSwaps(board, 13);
+      const actualSwaps = getSwap(board, 13);
 
       it("calculate", () => {
         expect(actualSwaps).toEqual(expectedSwaps);
@@ -124,7 +124,7 @@ describe("swapping cells", () => {
     ] as Board;
 
     it("forbidden vertical swap", () => {
-      const actual = getSwaps(board, 5);
+      const actual = getSwap(board, 5);
       expect(actual).toEqual([]);
     });
 
@@ -138,7 +138,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = getSwaps(board, 4);
+        const actual = getSwap(board, 4);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -152,7 +152,7 @@ describe("swapping cells", () => {
       const expectedSwaps: Swap[] = [];
 
       it("calculate", () => {
-        const actual = getSwaps(board, 8);
+        const actual = getSwap(board, 8);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -173,7 +173,7 @@ describe("swapping cells", () => {
       ] as Board;
 
       it("calculate", () => {
-        const actual = getSwaps(board, 1);
+        const actual = getSwap(board, 1);
         expect(actual).toEqual(expectedSwaps);
       });
 
@@ -185,7 +185,7 @@ describe("swapping cells", () => {
 
     describe("more than one horizontal swap is not allowed", () => {
       const expectedSwaps: Swap[] = [];
-      const actualSwaps = getSwaps(board, 2);
+      const actualSwaps = getSwap(board, 2);
 
       it("calculate", () => {
         expect(actualSwaps).toEqual(expectedSwaps);
