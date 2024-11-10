@@ -1,4 +1,4 @@
-import { scan, Subject } from "rxjs";
+import { map, scan, shareReplay, startWith, Subject } from "rxjs";
 import { assertNever } from "./assertNever";
 import { mergeWithKey } from "./mergeWithKey";
 import { Idx } from "./model";
@@ -63,5 +63,9 @@ export const state$ = action$.pipe(
       default:
         assertNever(action);
     }
-  }, initialState)
+  }, initialState),
+  startWith(initialState),
+  shareReplay(1)
 );
+
+export const counterText$ = state$.pipe(map(stateModel.getCounterText));
