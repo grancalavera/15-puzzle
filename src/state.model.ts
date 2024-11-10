@@ -52,7 +52,6 @@ type Solving = {
 
 export const solved: GameState = {
   kind: "Solved",
-  moveCount: 0,
   board: [
     ...[0, 1, 2, 3],
     ...[4, 5, 6, 7],
@@ -136,3 +135,20 @@ export const beginSolve = (state: GameState): GameState => ({
 });
 
 export const endSolve = (): GameState => solved;
+
+export const getCounterText = (state: GameState): string => {
+  if (state.kind === "Solved" && state.moveCount === undefined) {
+    return "shuffle to start";
+  }
+
+  if (state.kind === "Shuffling") {
+    return "shuffling...";
+  }
+
+  if (state.kind === "Solving") {
+    return "solving...";
+  }
+
+  const moveCount = getMoveCount(state);
+  return `${moveCount} move${moveCount === 1 ? "" : "s"}`;
+};

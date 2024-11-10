@@ -33,12 +33,13 @@ import {
   beginShuffle,
   beginSolve,
   beginSwap,
+  counterText$,
   endShuffle,
   endSolve,
   endSwap,
   state$,
 } from "./state";
-import { getMoveCount, initialState } from "./state.model";
+import { initialState } from "./state.model";
 
 gsap.registerPlugin(PixiPlugin);
 PixiPlugin.registerPIXI(p);
@@ -134,12 +135,10 @@ async function main() {
     });
   };
 
+  counterText$.subscribe((text) => counter.setText(text));
+
   state$.subscribe(async (state) => {
     shuffleSolve.disabled = false;
-    const moveCount = getMoveCount(state);
-    counter.setText(
-      moveCount > 0 ? `${moveCount} move${moveCount === 1 ? "" : "s"}` : ""
-    );
 
     switch (state.kind) {
       case "NotSolved": {
