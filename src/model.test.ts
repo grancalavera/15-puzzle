@@ -3,10 +3,18 @@ import {
   Board,
   isSolved,
   applyAllSwaps,
+  applyOneSwap,
   Swap,
   getSwappables,
   Swappables,
   getSwap,
+  getRandomSwaps,
+  shuffleBoard,
+  getRowIdx,
+  getColIdx,
+  isBlank,
+  gridCount,
+  cellCount,
 } from "./model";
 
 describe("solving puzzles", () => {
@@ -244,5 +252,135 @@ describe("swappable cells", () => {
       const actual = getSwappables(board);
       expect(actual).toEqual(expected);
     });
+  });
+});
+
+describe("board constants", () => {
+  it("should have correct grid count", () => {
+    expect(gridCount).toBe(4);
+  });
+
+  it("should have correct cell count", () => {
+    expect(cellCount).toBe(16);
+  });
+
+  it("should identify blank cell", () => {
+    expect(isBlank(_)).toBe(true);
+    expect(isBlank(15)).toBe(true);
+    expect(isBlank(0)).toBe(false);
+    expect(isBlank(14)).toBe(false);
+  });
+});
+
+describe("board utilities", () => {
+  describe("getRowIdx", () => {
+    it("should return correct row indices", () => {
+      expect(getRowIdx(0)).toBe(0); // first row
+      expect(getRowIdx(3)).toBe(0); // first row
+      expect(getRowIdx(4)).toBe(1); // second row
+      expect(getRowIdx(7)).toBe(1); // second row
+      expect(getRowIdx(12)).toBe(3); // last row
+      expect(getRowIdx(15)).toBe(3); // last row
+    });
+  });
+
+  describe("getColIdx", () => {
+    it("should return correct column indices", () => {
+      expect(getColIdx(0)).toBe(0); // first column
+      expect(getColIdx(4)).toBe(0); // first column
+      expect(getColIdx(3)).toBe(3); // last column
+      expect(getColIdx(15)).toBe(3); // last column
+      expect(getColIdx(5)).toBe(1); // second column
+    });
+  });
+});
+
+describe("single swap operations", () => {
+  it("should apply one swap correctly", () => {
+    const board: Board = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, _];
+    const swap: Swap = [15, 14];
+    const result = applyOneSwap(board, swap);
+    const expected: Board = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, _, 14];
+    expect(result).toEqual(expected);
+  });
+
+  it("should not mutate original board", () => {
+    const board: Board = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, _];
+    const original = [...board];
+    const swap: Swap = [15, 14];
+    applyOneSwap(board, swap);
+    expect(board).toEqual(original);
+  });
+});
+
+describe("random swaps", () => {
+  it("should return valid swaps for any board", () => {
+    const board: Board = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, _];
+    const swaps = getRandomSwaps(board);
+    expect(swaps).toHaveLength(1);
+    
+    // Should be swapping with blank position
+    const [swap] = swaps;
+    expect(swap).toBeDefined();
+    expect(swap).toContain(15); // blank position
+  });
+
+  it("should return swaps only with adjacent tiles", () => {
+    const board: Board = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, _, 12, 13, 14, 15];
+    const swaps = getRandomSwaps(board);
+    const [swap] = swaps;
+    const swappables = getSwappables(board);
+    
+    // The non-blank position should be in swappables
+    const nonBlankPos = swap?.find(pos => pos !== 11);
+    expect(swappables).toContain(nonBlankPos);
+  });
+});
+
+describe("board shuffling", () => {
+  it("should shuffle board with specified number of moves", () => {
+    const board: Board = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, _];
+    const count = 10;
+    const result = shuffleBoard(board, count);
+    
+    expect(result.shuffles).toHaveLength(count);
+    expect(result.board).not.toEqual(board); // Should be different after shuffling
+  });
+
+  it("should produce valid swaps during shuffle", () => {
+    const board: Board = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, _];
+    const count = 5;
+    const result = shuffleBoard(board, count);
+    
+    // Each swap should involve the blank position from the current board state
+    let currentBoard = board;
+    for (const swap of result.shuffles) {
+      const blankIdx = currentBoard.indexOf(_);
+      expect(swap).toContain(blankIdx);
+      currentBoard = applyOneSwap(currentBoard, swap);
+    }
+  });
+
+  it("should not produce reverse swaps consecutively", () => {
+    const board: Board = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, _];
+    const count = 20;
+    const result = shuffleBoard(board, count);
+    
+    // Check that no consecutive swaps are reverses of each other
+    for (let i = 0; i < result.shuffles.length - 1; i++) {
+      const [a1, a2] = result.shuffles[i]!;
+      const [b1, b2] = result.shuffles[i + 1]!;
+      
+      // Should not be reverse swap
+      expect(a1 === b2 && a2 === b1).toBe(false);
+    }
+  });
+
+  it("should handle edge case of zero shuffles", () => {
+    const board: Board = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, _];
+    const result = shuffleBoard(board, 0);
+    
+    expect(result.shuffles).toHaveLength(0);
+    expect(result.board).toEqual(board);
   });
 });
