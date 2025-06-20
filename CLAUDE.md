@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Development**: `npm run dev` - Starts Vite dev server
 - **Build**: `npm run build` - TypeScript compilation + Vite build
 - **Preview**: `npm run preview` - Preview production build
-- **Test**: `npm run test` - Run Vitest tests
+- **Test**: `npm run test` - Run Vitest tests (watch mode)
+- **Test Single File**: `npm run test -- model.test.ts` - Run specific test file
 - **Type Check**: `npm run typecheck` - TypeScript type checking without emit
 
 ## Architecture
@@ -35,3 +36,9 @@ This is a 15-puzzle game built with PixiJS, TypeScript, and RxJS using a reactiv
 - `model.ts`: Pure game logic, board manipulation, and validation
 - `state.ts` & `state.model.ts`: Reactive state management
 - `components/Tile.ts`: Main game piece with swap animations
+
+### Testing
+- **Framework**: Vitest with global test functions enabled
+- **Existing Tests**: Comprehensive unit tests for `model.ts` and `state.model.ts`
+- **Test Files**: Located alongside source files with `.test.ts` suffix
+- **Configuration**: Vite handles test configuration with TypeScript support
