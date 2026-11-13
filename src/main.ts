@@ -13,7 +13,6 @@ import {
   BlankTile,
   SwappableTile,
   SwappableTileOptions,
-  SwapSpeed,
   Tile,
 } from "./components/Tile";
 import { loadFonts } from "./loadFonts";
@@ -29,17 +28,14 @@ import {
   gridSize,
   padding,
 } from "./settings";
+import { createActor, fromPromise } from "xstate";
 import {
-  beginShuffle,
-  beginSolve,
-  beginSwap,
-  counterText$,
-  endShuffle,
-  endSolve,
-  endSwap,
-  state$,
+  AnimateSwapsInput,
+  gameMachine,
+  GameSnapshot,
+  getCounterText,
+  getSwappableIdxs,
 } from "./state";
-import { initialState } from "./state.model";
 
 gsap.registerPlugin(PixiPlugin);
 PixiPlugin.registerPIXI(p);
@@ -60,6 +56,16 @@ async function main() {
 
   document.querySelector<HTMLDivElement>("#app")!.appendChild(app.canvas);
 
+  const game = createActor(
+    gameMachine.provide({
+      actors: {
+        animateSwaps: fromPromise<void, AnimateSwapsInput>(({ input }) =>
+          swapTiles(input.swaps, input.speed)
+        ),
+      },
+    })
+  );
+
   const shuffleSolve = new Switch({
     width: contentWidth,
     height: cellSize,
@@ -67,10 +73,10 @@ async function main() {
     onChange: (value) => {
       if (value) {
         shuffleSolve.setText("Solve");
-        beginShuffle();
+        game.send({ type: "SHUFFLE" });
       } else {
         shuffleSolve.setText("Shuffle");
-        beginSolve();
+        game.send({ type: "SOLVE" });
       }
     },
   });
@@ -84,29 +90,31 @@ async function main() {
     textStyle: counterText,
   });
 
-  const tiles: SwappableTile[] = initialState.board.map((cell, i) => {
+  const initial = game.getSnapshot();
+
+  const tiles: SwappableTile[] = initial.context.board.map((cell, i) => {
     const idx = i as Idx;
-    const enabled =
-      initialState.kind === "NotSolved" &&
-      initialState.swappables.includes(idx);
 
     const options: SwappableTileOptions = {
       idx,
       cell,
-      disabled: !enabled,
-      onSwap: beginSwap,
+      disabled: !getSwappableIdxs(initial).includes(idx),
+      onSwap: (idx) => game.send({ type: "SWAP", idx }),
     };
 
     const tile: SwappableTile = isBlank(cell)
       ? new BlankTile(options)
       : new Tile(options);
 
-    tile.solved = initialState.kind === "Solved";
+    tile.solved = initial.matches("solved");
 
     return tile;
   });
 
-  const swapTiles = async (swaps: Swap[], speed: SwapSpeed): Promise<void> => {
+  const swapTiles = async (
+    swaps: Swap[],
+    speed: AnimateSwapsInput["speed"]
+  ): Promise<void> => {
     const [next, ...rest] = swaps;
 
     if (!next) return;
@@ -135,47 +143,40 @@ async function main() {
     });
   };
 
-  counterText$.subscribe((text) => counter.setText(text));
+  const render = (snapshot: GameSnapshot) => {
+    counter.setText(getCounterText(snapshot));
 
-  state$.subscribe(async (state) => {
-    shuffleSolve.disabled = false;
-
-    switch (state.kind) {
-      case "NotSolved": {
-        enableSwappableTiles(state.swappables);
+    // animations run inside the machine's `animateSwaps` actor; here we only
+    // set up what the player can interact with in each state
+    switch (snapshot.value) {
+      case "playing": {
+        shuffleSolve.disabled = false;
+        enableSwappableTiles(getSwappableIdxs(snapshot));
         return;
       }
-      case "Solved": {
+      case "solved": {
+        shuffleSolve.disabled = false;
         disableAllTiles(true);
         shuffleSolve.setChecked(false);
         shuffleSolve.setText("Shuffle");
         return;
       }
-      case "Swapping": {
-        disableAllTiles();
-        await swapTiles(state.swaps, "slow");
-        endSwap();
-        return;
-      }
-      case "Shuffling": {
+      case "swapping":
+      case "shuffling":
+      case "solving": {
         shuffleSolve.disabled = true;
         disableAllTiles();
-        await swapTiles(state.shuffles, "fast");
-        endShuffle();
-        return;
-      }
-      case "Solving": {
-        shuffleSolve.disabled = true;
-        disableAllTiles();
-        await swapTiles(state.solution, "fast");
-        endSolve();
         return;
       }
       default: {
-        assertNever(state);
+        assertNever(snapshot.value);
       }
     }
-  });
+  };
+
+  game.subscribe(render);
+  render(initial);
+  game.start();
 
   const gameBackground = new Box({
     bgColor: color.gray1,
